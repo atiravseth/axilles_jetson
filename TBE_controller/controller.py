@@ -66,11 +66,11 @@ class TBECalibration():
 
     # Detect heel strike from heel FSR rising above threshold
     def detectHeelGround(self) -> bool:
-        return self.data.heel_fsr > self.heel_strike_threshold
+        return self.data.filtered_heel_fsr > self.heel_strike_threshold
 
     # Detect toe off from toe FSR falling below threshold
     def detectToeOff(self) -> bool:
-        return self.data.toe_fsr < self.toe_off_threshold
+        return self.data.filtered_toe_fsr < self.toe_off_threshold
 
     # Checks rising threshold of heel strike
     def detectHeelStrikeEdge(self) -> bool:
@@ -100,13 +100,13 @@ class TBECalibration():
         heel_strike_edge = self.detectHeelStrikeEdge()
         toe_off_edge = self.detectToeOffEdge()
 
-        # Record heel strike timestamp on rising edge
+        # Record heel strike timestamp on rising edge, along with no noise check
         if heel_strike_edge:
             self.logger.logger.info("Heel strike detected. Entering stance phase.")
             self.heel_strike_times = np.roll(self.heel_strike_times, -1)
             self.heel_strike_times[-1] = self.logger.getCurrentTime()
         
-        # Record toe off timestamp on falling edge
+        # Record toe off timestamp on falling edge, along with no noise check
         if toe_off_edge:
             self.logger.logger.info("Toe off detected. Entering swing phase.")
             self.toe_off_times = np.roll(self.toe_off_times, -1)
@@ -134,7 +134,7 @@ class TBECalibration():
         self.controller.torque_profile = PchipInterpolator(common_grid, mean_torque) 
     
     # Getting the torque profile points for each stride
-    def getTorqueProfilePoints(self):
+    def getTorqueProfilePoints(self) -> None:
         
         # On new stride, reset timer and list
         if self._torque_stride_start_time is None:
@@ -159,7 +159,7 @@ class TBECalibration():
             self._torque_stride_start_time = None    
 
     # The actual calibration process
-    def calibrate(self):
+    def calibrate(self) -> None:
 
         # Phase 1: Collect stride times
         if not self._stride_times_collected:
@@ -190,11 +190,11 @@ class TBEActivation():
         self._recent_strides = []
 
     # Function to provide torque output based on the current time and the torque profile
-    def giveTorqueOutput(self, phase: float):
+    def giveTorqueOutput(self, phase: float) -> None:
         if self.controller.torque_profile is not None:
             self.data.sendTorqueData(float(self.controller.torque_profile(phase)))
 
-    def activate(self):
+    def activate(self) -> None:
 
         # Detect heel strike to reset phase reference
         if self.calibration.detectHeelStrikeEdge():

@@ -1,7 +1,40 @@
 from utilities import *
+import numpy as np
 import smbus2
-import time
+import can          # ADDED: for CAN bus communication
 import struct
+import time
+
+# ── CAN / Motor Constants ─────────────────────────────────────────────────── # ADDED
+CAN_INTERFACE = "can0"
+MOTOR_ID      = 0x68        # Change if your motor ID differs
+
+# MIT mode limits for AK80-9
+MIT_P_MIN  = -12.56
+MIT_P_MAX  =  12.56
+MIT_V_MIN  = -65.0
+MIT_V_MAX  =  65.0
+MIT_T_MIN  = -18.0
+MIT_T_MAX  =  18.0
+MIT_KP_MIN =   0.0
+MIT_KP_MAX = 500.0
+MIT_KD_MIN =   0.0
+MIT_KD_MAX =   5.0
+
+# CAN mode IDs
+MODE_MIT      = 8
+MODE_VELOCITY = 3
+
+# ── CAN Helpers (from ak_80_test.py) ──────────────────────────────────────── # ADDED
+
+def _clamp(val, lo, hi):
+    return max(lo, min(hi, val))
+
+def _float_to_uint(x, x_min, x_max, bits):
+    x = _clamp(x, x_min, x_max)
+    span = x_max - x_min
+    return int((x - x_min) * ((1 << bits) / span))
+
 
 # Class to obtain the data from the sensors and store it in a structured format
 class SensorData():
@@ -15,11 +48,32 @@ class SensorData():
         self.heel_fsr = 0.0
         self.toe_fsr = 0.0
 
-        # Torque input data
+        # Filtered FSR data for heel and toe
+        self.filtered_heel_fsr = 0.0
+        self.filtered_toe_fsr = 0.0
+        self.alpha = 2 * np.pi * FSR_FILTER_CUTOFF * DT / (2 * np.pi * FSR_FILTER_CUTOFF * DT + 1)
+
+        # Torque input data (actual torque read back from motor)
         self.torque_input = 0.0
 
-        # Bus to read sensor data
+        # ADDED: Motor feedback data
+        self.motor_position = 0.0       # degrees
+        self.motor_speed = 0.0          # ERPM
+        self.motor_current = 0.0        # Amps
+        self.motor_temperature = 0      # °C
+        self.motor_error = 0
+
+        # Bus to read FSR sensor data
         self.bus = smbus2.SMBus(I2C_BUS)
+
+        # ADDED: CAN bus for motor communication
+        try:
+            self.can_bus = can.interface.Bus(channel=CAN_INTERFACE, interface="socketcan")
+            self.logger.logger.info(f"CAN bus opened on {CAN_INTERFACE}")
+        except Exception as e:
+            self.logger.logger.error(f"Failed to open CAN bus: {e}")
+            self.logger.logger.error("Run: sudo ip link set can0 up type can bitrate 1000000")
+            self.can_bus = None
 
         self.logger.logger.info("Sensor stream channel opened.")
     
@@ -30,16 +84,92 @@ class SensorData():
         self.toe_fsr = self.read_channel(self.bus, CFG_AIN0)
         self.heel_fsr = self.read_channel(self.bus, CFG_AIN1)
 
-        v0 = max(self.toe_fsr, 0) * VOLTS_PER_COUNT
-        v1 = max(self.heel_fsr, 0) * VOLTS_PER_COUNT
+        # ADDED: Read motor feedback from CAN bus
+        self._readMotorFeedback()
 
-        print(f"{self.toe_fsr:>12d}  {v0:>10.4f}  {self.heel_fsr:>12d}  {v1:>10.4f}")
+        # ADDED: Store actual motor torque for calibration torque profile recording
+        # Motor reports current in Amps — convert to torque using motor torque constant
+        # For AK80-9: torque ≈ current × kt × gear_ratio
+        # But the feedback current is already the output torque estimate in most firmware
+        self.torque_input = self.motor_current
 
-        # Readin torque data
-        self.torque_input = 0.0
+    # Function to filter the data using a low-pass filter (for FSR data)
+    def lowPassFilter(self):
+        # Simple low-pass filter using exponential moving average
+        self.filtered_heel_fsr = self.alpha * self.heel_fsr + (1 - self.alpha) * self.filtered_heel_fsr 
+        self.filtered_toe_fsr = self.alpha * self.toe_fsr + (1 - self.alpha) * self.filtered_toe_fsr 
 
+    # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
     def sendTorqueData(self, torque: float):
-        self.logger.logger.info(f"Torque sent: {torque}")
+
+        if self.can_bus is None:
+            self.logger.logger.warning("CAN bus not available. Torque not sent.")
+            return
+
+        # Clamp torque to motor limits
+        torque = _clamp(torque, MIT_T_MIN, MIT_T_MAX)
+
+        # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
+        kp = 0.0
+        kd = 0.0
+        pos = 0.0
+        vel = 0.0
+
+        kp_int = _float_to_uint(kp,     MIT_KP_MIN, MIT_KP_MAX, 12)
+        kd_int = _float_to_uint(kd,     MIT_KD_MIN, MIT_KD_MAX, 12)
+        p_int  = _float_to_uint(pos,    MIT_P_MIN,  MIT_P_MAX,  16)
+        v_int  = _float_to_uint(vel,    MIT_V_MIN,  MIT_V_MAX,  12)
+        t_int  = _float_to_uint(torque, MIT_T_MIN,  MIT_T_MAX,  12)
+
+        buf = [0] * 8
+        buf[0] =  kp_int >> 4
+        buf[1] = ((kp_int & 0xF) << 4) | (kd_int >> 8)
+        buf[2] =  kd_int & 0xFF
+        buf[3] =  p_int  >> 8
+        buf[4] =  p_int  & 0xFF
+        buf[5] =  v_int  >> 4
+        buf[6] = ((v_int  & 0xF) << 4) | (t_int >> 8)
+        buf[7] =  t_int  & 0xFF
+
+        arb_id = (MODE_MIT << 8) | MOTOR_ID
+        msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
+        self.can_bus.send(msg)
+
+    # ADDED: Read motor feedback from CAN reply
+    def _readMotorFeedback(self):
+
+        if self.can_bus is None:
+            return
+
+        msg = self.can_bus.recv(timeout=0.0005)  # Short timeout — don't block the loop
+
+        if msg is None or len(msg.data) < 8:
+            return
+
+        # Decode feedback (same format as read_feedback in ak_80_test.py)
+        self.motor_position    = struct.unpack(">h", bytes(msg.data[0:2]))[0] * 0.1    # degrees
+        self.motor_speed       = struct.unpack(">h", bytes(msg.data[2:4]))[0] * 10.0   # ERPM
+        self.motor_current     = struct.unpack(">h", bytes(msg.data[4:6]))[0] * 0.01   # Amps
+        self.motor_temperature = msg.data[6]                                             # °C
+        self.motor_error       = msg.data[7]
+
+    # ADDED: Stop motor safely (zero velocity command)
+    def stopMotor(self):
+        if self.can_bus is None:
+            return
+
+        # Send zero torque via MIT mode
+        self.sendTorqueData(0.0)
+        self.logger.logger.info("Motor stopped (zero torque sent).")
+
+    # ADDED: Shut down CAN bus cleanly
+    def shutdown(self):
+        self.stopMotor()
+        if self.can_bus is not None:
+            self.can_bus.shutdown()
+            self.logger.logger.info("CAN bus shut down.")
+        self.bus.close()
+        self.logger.logger.info("I2C bus closed.")
 
     def read_channel(self, bus: smbus2.SMBus, config: list[int]) -> int:
         """Trigger a single-shot conversion and return the signed 16-bit raw count."""
@@ -52,8 +182,3 @@ class SensorData():
         # Big-endian signed 16-bit
         raw = struct.unpack(">h", bytes(data))[0]
         return raw
-    
- 
-
-
-        

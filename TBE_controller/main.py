@@ -24,11 +24,13 @@ def main():
     # Create an instance of the TBEActivation class to activate
     activation = TBEActivation(controller, sensor_data, calibration, TBElog)
 
+    TBElog.logger.info(f"Starting main loop at {MOTOR_CONTROL_FREQ} Hz...")
+
     # Start the main loop
     try:
         while True:
 
-            loop_start = TBElog.getCurrentTime()
+            loop_start = time.perf_counter()
 
             # Read the sensor data
             sensor_data.readSensors()
@@ -40,15 +42,15 @@ def main():
                 # If calibrated, run activation
                 activation.activate()
             
-            elapsed = TBElog.getCurrentTime()- loop_start
+            elapsed = time.perf_counter() - loop_start
             sleep_time = DT - elapsed
             if sleep_time > 0:
                 time.sleep(sleep_time)
     
     except KeyboardInterrupt:
         TBElog.logger.info("Shutting down Controller...")
-        sensor_data.sendTorqueData(0.0)           
-        TBElog.logger.info("Motor Torque set to zero. Exiting.")
+        sensor_data.shutdown()          
+        TBElog.logger.info("Exiting.")
 
      
 if __name__ == "__main__":

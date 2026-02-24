@@ -76,3 +76,6 @@ CONV_DELAY = 1 / 128 + 0.002   # >1 conversion period @ 128 SPS + margin
 
 # Duty time of motor control loop
 DT = 1.0 / MOTOR_CONTROL_FREQ
+
+# cut off frequency for low-pass fsr filtering (Hz)
+FSR_FILTER_CUTOFF = 10.0
