@@ -3,6 +3,7 @@ import time
 import numpy as np
 from typing import Optional
 from scipy.interpolate import PchipInterpolator
+import scipy.io
 
 from utilities import *
 from data_obtainer import SensorData
@@ -107,7 +108,7 @@ class TBECalibration():
             self.heel_strike_times[-1] = self.logger.getCurrentTime()
         
         # Record toe off timestamp on falling edge, along with no noise check
-        if toe_off_edge:
+        if toe_off_edge and self.heel_strike_times[-1] > 0:
             self.logger.logger.info("Toe off detected. Entering swing phase.")
             self.toe_off_times = np.roll(self.toe_off_times, -1)
             self.toe_off_times[-1] = self.logger.getCurrentTime()
@@ -122,16 +123,30 @@ class TBECalibration():
     # Calculate the torque profile based on the stance phase percent and the stride time
     def calculateTorqueProfile(self) -> None:
 
-        common_grid = np.linspace(0, 1, 100)    
+        common_grid = np.linspace(0, 1, 101)    
         resampled = []
 
         for stride in self.torque_profile_points:
             original_phases = np.linspace(0, 1, len(stride))                  
             resampled.append(np.interp(common_grid, original_phases, stride))
 
-        mean_torque = np.mean(resampled, axis=0)   
+        # mean_torque = np.mean(resampled, axis=0) 
 
-        self.controller.torque_profile = PchipInterpolator(common_grid, mean_torque) 
+        '''
+        Overriding actual actual algo to produce motor torque
+        '''  
+
+        #### Start here ####
+
+        data = scipy.io.loadmat('avg_torque_profiles.mat')
+
+        avg_profiles = data['avg_profiles']  # shape: (101, 2)
+        std_profiles = data['std_profiles']  # shape: (101, 2)
+        x_axis       = data['x_axis'].flatten()  # shape: (101,)
+
+        #### Until here ####
+
+        self.controller.torque_profile = PchipInterpolator(common_grid, avg_profiles[:, 0]) 
     
     # Getting the torque profile points for each stride
     def getTorqueProfilePoints(self) -> None:
@@ -196,7 +211,7 @@ class TBEActivation():
 
     def activate(self) -> None:
 
-        # Detect heel strike to reset phase reference
+        # # Detect heel strike to reset phase reference
         if self.calibration.detectHeelStrikeEdge():
             current_time = self.logger.getCurrentTime()
 
@@ -206,7 +221,7 @@ class TBEActivation():
                 self._recent_strides.append(latest_stride)
                 if len(self._recent_strides) > ADAPTIVE_STRIDE_WINDOW:
                     self._recent_strides.pop(0)
-                self.controller.stride_time = float(np.median(self._recent_strides))
+                # self.controller.stride_time = float(np.median(self._recent_strides))
 
             self.controller.last_heel_strike_time = current_time         
 
@@ -223,5 +238,5 @@ class TBEActivation():
         # Command torque during stance 
         if phase < 1.0:
             self.giveTorqueOutput(phase)
-        else:
+        elif not self.calibration.detectStancePhase():
             self.data.sendTorqueData(0.0)     

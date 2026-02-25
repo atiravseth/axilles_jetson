@@ -14,8 +14,8 @@ MIT_P_MIN  = -12.56
 MIT_P_MAX  =  12.56
 MIT_V_MIN  = -65.0
 MIT_V_MAX  =  65.0
-MIT_T_MIN  = -18.0
-MIT_T_MAX  =  18.0
+MIT_T_MIN  = -22.0
+MIT_T_MAX  =  22.0
 MIT_KP_MIN =   0.0
 MIT_KP_MAX = 500.0
 MIT_KD_MIN =   0.0
@@ -81,8 +81,12 @@ class SensorData():
     def readSensors(self):
 
         # Reading FSR data
+        
         self.toe_fsr = self.read_channel(self.bus, CFG_AIN0)
         self.heel_fsr = self.read_channel(self.bus, CFG_AIN1)
+
+        # Passing the fsr data through a low pass filter
+        self.lowPassFilter()
 
         # ADDED: Read motor feedback from CAN bus
         self._readMotorFeedback()
@@ -98,6 +102,7 @@ class SensorData():
         # Simple low-pass filter using exponential moving average
         self.filtered_heel_fsr = self.alpha * self.heel_fsr + (1 - self.alpha) * self.filtered_heel_fsr 
         self.filtered_toe_fsr = self.alpha * self.toe_fsr + (1 - self.alpha) * self.filtered_toe_fsr 
+        # self.logger.logger.info(f"Filtered Heel FSR: {self.filtered_heel_fsr:.2f}, Filtered Toe FSR: {self.filtered_toe_fsr:.2f}")
 
     # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
     def sendTorqueData(self, torque: float):
@@ -107,8 +112,8 @@ class SensorData():
             return
 
         # Clamp torque to motor limits
-        torque = _clamp(torque, MIT_T_MIN, MIT_T_MAX)
-
+        torque = ASSISTANCE_LEVEL * _clamp(torque, MIT_T_MIN, MIT_T_MAX)
+        self.logger.logger.info(f"Sending torque command: {torque:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
         kd = 0.0
