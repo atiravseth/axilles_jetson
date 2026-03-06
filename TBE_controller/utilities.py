@@ -79,3 +79,11 @@ DT = 1.0 / MOTOR_CONTROL_FREQ
 
 # cut off frequency for low-pass fsr filtering (Hz)
 FSR_FILTER_CUTOFF = 10.0
+
+# Encoder joint limits
+PLANTARFLEXION_LIMIT = 30.0   # degrees
+DORSIFLEXION_LIMIT = -20.0    # degrees
+
+# Impedance control parameters
+KP_IMPEDANCE = 0.5
+KD_IMPEDANCE = 0.01

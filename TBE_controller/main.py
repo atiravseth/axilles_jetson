@@ -44,6 +44,11 @@ def main():
             
             elapsed = time.perf_counter() - loop_start
             sleep_time = DT - elapsed
+
+            # To simply print the remaining time for debugging - REMOVE LATER
+            TBElog.logger.info(f"Loop time: {elapsed:.4f} s, Sleep time: {sleep_time:.4f} s")
+            
+            # If the loop is running faster than the desired frequency, sleep for the remaining time
             if sleep_time > 0:
                 time.sleep(sleep_time)
     
