@@ -207,7 +207,8 @@ class TBEActivation():
     # Function to provide torque output based on the current time and the torque profile
     def giveTorqueOutput(self, phase: float) -> None:
         if self.controller.torque_profile is not None:
-            self.data.sendTorqueData(float(self.controller.torque_profile(phase)))
+            self.data.torque_output += float(self.controller.torque_profile(phase))
+            self.data.sendTorqueData()
 
     def activate(self) -> None:
 
@@ -239,4 +240,25 @@ class TBEActivation():
         if phase < 1.0:
             self.giveTorqueOutput(phase)
         elif not self.calibration.detectStancePhase():
-            self.data.sendTorqueData(0.0)     
+            self.data.torque_output = 0.0
+            self.data.sendTorqueData()   
+
+# Class for the safety impedance controller to keep ankle joint angle within safe limits (not implemented in current version, but can be extended in future)
+class TBEImpedanceController():
+
+    def __init__(self, controller: TBEController, data: SensorData, logger: Logger):
+        self.controller = controller
+        self.data = data
+        self.logger = logger
+
+    def checkLimits(self) -> None:
+        
+        # Encoder limit val
+        hyper_flexion_value = self.data.encoder_data - np.clip(self.data.encoder_data, -PLANTARFLEXION_LIMIT, DORSIFLEXION_LIMIT)
+        # Check if encoder data is within limits and if not, command opposing impedance torque
+        if not (hyper_flexion_value == 0):
+            self.logger.logger.info("Joint limit exceeded! Applying safety impedance control.")
+            # Simple proportional impedance control
+            torque_command = -KP_IMPEDANCE * hyper_flexion_value -KD_IMPEDANCE * self.data.filtered_encoder_velocity
+            # self.data.sendTorqueData(torque_command)
+            self.data.torque_output += torque_command    

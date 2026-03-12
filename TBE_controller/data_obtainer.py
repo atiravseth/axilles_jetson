@@ -53,8 +53,16 @@ class SensorData():
         self.filtered_toe_fsr = 0.0
         self.alpha = 2 * np.pi * FSR_FILTER_CUTOFF * DT / (2 * np.pi * FSR_FILTER_CUTOFF * DT + 1)
 
-        # Torque input data (actual torque read back from motor)
-        self.torque_input = 0.0
+        # Torque output (torque sent to the motor)
+        self.torque_output = 0.0
+
+        # Encoder position and velocity
+        self.encoder_data = 0.0
+        self.encoder_velocity = 0.0
+        self._prev_encoder_data = -np.inf
+        self._prev_encoder_time = time.perf_counter()
+        self.filtered_encoder_velocity = 0.0
+        self.alpha_enc = 2 * np.pi * ENC_VEL_CUTOFF * DT / (2 * np.pi * ENC_VEL_CUTOFF * DT + 1)
 
         # ADDED: Motor feedback data
         self.motor_position = 0.0       # degrees
@@ -88,14 +96,18 @@ class SensorData():
         # Passing the fsr data through a low pass filter
         self.lowPassFilter()
 
+        # Reading encoder data
+        self.readEncoder()
+        self.logger.logger.info(f"Encoder angle: {self.encoder_data:.2f} deg, velocity: {self.filtered_encoder_velocity:.2f} deg/s") 
+
         # ADDED: Read motor feedback from CAN bus
-        self._readMotorFeedback()
+        # self._readMotorFeedback()
 
         # ADDED: Store actual motor torque for calibration torque profile recording
         # Motor reports current in Amps — convert to torque using motor torque constant
         # For AK80-9: torque ≈ current × kt × gear_ratio
         # But the feedback current is already the output torque estimate in most firmware
-        self.torque_input = self.motor_current
+        self.torque_output += self.motor_current
 
     # Function to filter the data using a low-pass filter (for FSR data)
     def lowPassFilter(self):
@@ -105,15 +117,15 @@ class SensorData():
         # self.logger.logger.info(f"Filtered Heel FSR: {self.filtered_heel_fsr:.2f}, Filtered Toe FSR: {self.filtered_toe_fsr:.2f}")
 
     # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
-    def sendTorqueData(self, torque: float):
+    def sendTorqueData(self):
 
         if self.can_bus is None:
             self.logger.logger.warning("CAN bus not available. Torque not sent.")
             return
 
         # Clamp torque to motor limits
-        torque = ASSISTANCE_LEVEL * _clamp(torque, MIT_T_MIN, MIT_T_MAX)
-        self.logger.logger.info(f"Sending torque command: {torque:.2f} Nm")
+        self.torque_output = ASSISTANCE_LEVEL * _clamp(self.torque_output, MIT_T_MIN, MIT_T_MAX)
+        self.logger.logger.info(f"Sending torque command: {self.torque_output:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
         kd = 0.0
@@ -124,7 +136,7 @@ class SensorData():
         kd_int = _float_to_uint(kd,     MIT_KD_MIN, MIT_KD_MAX, 12)
         p_int  = _float_to_uint(pos,    MIT_P_MIN,  MIT_P_MAX,  16)
         v_int  = _float_to_uint(vel,    MIT_V_MIN,  MIT_V_MAX,  12)
-        t_int  = _float_to_uint(torque, MIT_T_MIN,  MIT_T_MAX,  12)
+        t_int  = _float_to_uint(self.torque_output, MIT_T_MIN,  MIT_T_MAX,  12)
 
         buf = [0] * 8
         buf[0] =  kp_int >> 4
@@ -139,6 +151,7 @@ class SensorData():
         arb_id = (MODE_MIT << 8) | MOTOR_ID
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
         self.can_bus.send(msg)
+        self.torque_output = 0.0  # Reset after sending
 
     # ADDED: Read motor feedback from CAN reply
     def _readMotorFeedback(self):
@@ -164,7 +177,8 @@ class SensorData():
             return
 
         # Send zero torque via MIT mode
-        self.sendTorqueData(0.0)
+        self.torque_output = 0.0
+        self.sendTorqueData()
         self.logger.logger.info("Motor stopped (zero torque sent).")
 
     # ADDED: Shut down CAN bus cleanly
@@ -187,3 +201,34 @@ class SensorData():
         # Big-endian signed 16-bit
         raw = struct.unpack(">h", bytes(data))[0]
         return raw
+    
+    def readEncoder(self) -> None:
+        """Read 12-bit filtered angle from AS5600, return degrees 0–360."""
+        try:
+            # Get encoder angle
+            data = self.bus.read_i2c_block_data(AS5600_ADDR, AS5600_REG_ANGLE, 2)
+            raw = ((data[0] & 0x0F) << 8) | data[1]
+            self.encoder_data = raw * (360.0 / 4096.0) - ENCODER_OFFSET 
+
+            now = time.perf_counter()
+            dt = now - self._prev_encoder_time
+
+            # Get encoder velocity
+            if self._prev_encoder_data == -np.inf:
+                self._prev_encoder_data = self.encoder_data 
+
+            delta = self.encoder_data - self._prev_encoder_data
+            if delta > 180.0:
+                delta -= 360.0
+            elif delta < -180.0:
+                delta += 360.0
+            
+            self.encoder_velocity = delta / dt
+
+            # Update filtered encoder velocity
+            self.filtered_encoder_velocity = self.alpha_enc * (delta / dt) + (1 - self.alpha_enc) * self.filtered_encoder_velocity
+            self._prev_encoder_time = now
+            self._prev_encoder_data = self.encoder_data
+
+        except OSError:
+            return None

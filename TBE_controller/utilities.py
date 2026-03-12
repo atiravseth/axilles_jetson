@@ -59,6 +59,10 @@ ADC_ADDR     = 0x48   # ADS1115 default address (ADDR pin → GND)
 REG_CONVERSION = 0x00
 REG_CONFIG     = 0x01
 
+# AS5600 Encoder
+AS5600_ADDR      = 0x36
+AS5600_REG_ANGLE = 0x0E   # filtered 12-bit angle (MSB + LSB)
+
 # ── Config register templates (high byte, low byte) ──────────────────────────
 # High byte:  OS=1 | MUX[2:0] | PGA=001 (±4.096 V) | MODE=1 (single‑shot)
 # Low byte:   DR=100 (128 SPS) | COMP_MODE=0 | COMP_POL=0 | COMP_LAT=0 | COMP_QUE=11 (disabled)
@@ -79,6 +83,16 @@ DT = 1.0 / MOTOR_CONTROL_FREQ
 
 # cut off frequency for low-pass fsr filtering (Hz)
 FSR_FILTER_CUTOFF = 20.0
+ENC_VEL_CUTOFF = 20.0
+
+# Encoder calibration and limit values
+ENCODER_OFFSET = 180.0
+PLANTARFLEXION_LIMIT = 30.0
+DORSIFLEXION_LIMIT = 15.0 
+
+# Impedance controller PD values
+KP_IMPEDANCE = 0.5
+KD_IMPEDANCE = 0.05
 
 # Assistance percentage for torque profile during activation
 ASSISTANCE_LEVEL = 0.6
