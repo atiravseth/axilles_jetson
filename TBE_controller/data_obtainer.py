@@ -112,14 +112,14 @@ class SensorData():
         self.filtered_toe_fsr = self.alpha * self.toe_fsr + (1 - self.alpha) * self.filtered_toe_fsr 
 
     # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
-    def sendTorqueData(self, torque: float):
+    def sendTorqueData(self):
 
         if self.can_bus is None:
             self.logger.logger.warning("CAN bus not available. Torque not sent.")
             return
 
         # Clamp torque to motor limits
-        torque = _clamp(torque, MIT_T_MIN, MIT_T_MAX)
+        torque = _clamp(self.torque_input, MIT_T_MIN, MIT_T_MAX)
 
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
@@ -147,6 +147,9 @@ class SensorData():
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
         self.can_bus.send(msg)
 
+        # Reseting the torque value to zero
+        self.torque_input = 0.0
+
     # ADDED: Read motor feedback from CAN reply
     def _readMotorFeedback(self):
 
@@ -171,7 +174,8 @@ class SensorData():
             return
 
         # Send zero torque via MIT mode
-        self.sendTorqueData(0.0)
+        self.torque_input = 0.0
+        self.sendTorqueData()
         self.logger.logger.info("Motor stopped (zero torque sent).")
 
     # ADDED: Shut down CAN bus cleanly

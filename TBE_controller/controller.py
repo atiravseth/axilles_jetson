@@ -194,6 +194,7 @@ class TBEActivation():
         if self.controller.torque_profile is not None:
             # self.data.sendTorqueData(float(self.controller.torque_profile(phase)))
             self.data.torque_input += float(self.controller.torque_profile(phase))
+            self.data.sendTorqueData()
     def activate(self) -> None:
 
         # Detect heel strike to reset phase reference
@@ -224,7 +225,8 @@ class TBEActivation():
         if phase < 1.0:
             self.giveTorqueOutput(phase)
         else:
-            self.data.sendTorqueData(0.0)   
+            self.data.torque_input = 0.0
+            self.data.sendTorqueData()   
 
 # Class for the safety impedance controller to keep ankle joint angle within safe limits (not implemented in current version, but can be extended in future)
 class TBEImpedanceController():
