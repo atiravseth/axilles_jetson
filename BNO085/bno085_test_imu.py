@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument(
         "-b", "--bus",
         type=int,
-        default=7,
+        default=1,
         help="I2C bus number (default: 7)",
     )
     parser.add_argument(

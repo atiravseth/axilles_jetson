@@ -4,7 +4,7 @@ from data_obtainer import SensorData
 from utilities import *
 
 def main():
-
+    
     # Start logging
     TBElog = Logger()
 
@@ -28,6 +28,7 @@ def main():
     impedance_controller = TBEImpedanceController(controller, sensor_data, TBElog)
     TBElog.logger.info("Instantiating TBE Impedance Controller...")
 
+
     TBElog.logger.info(f"Starting main loop at {MOTOR_CONTROL_FREQ} Hz...")
 
     # Start the main loop
@@ -40,7 +41,7 @@ def main():
             sensor_data.readSensors()
 
             # If not calibrated, run calibration
-            if  calibration.calibrated:
+            if not calibration.calibrated:
                 calibration.calibrate()
             else:
 
@@ -48,7 +49,7 @@ def main():
                 impedance_controller.checkLimits()
                 # If calibrated, run activation
                 activation.activate()
-                
+
             
             elapsed = time.perf_counter() - loop_start
             sleep_time = DT - elapsed

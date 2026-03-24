@@ -1,5 +1,7 @@
 from utilities import *
 import numpy as np
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import smbus2
 import can          # ADDED: for CAN bus communication
 import struct
@@ -98,10 +100,9 @@ class SensorData():
 
         # Reading encoder data
         self.readEncoder()
-        self.logger.logger.info(f"Encoder angle: {self.encoder_data:.2f} deg, velocity: {self.filtered_encoder_velocity:.2f} deg/s") 
 
         # ADDED: Read motor feedback from CAN bus
-        # self._readMotorFeedback()
+        self._readMotorFeedback()
 
         # ADDED: Store actual motor torque for calibration torque profile recording
         # Motor reports current in Amps — convert to torque using motor torque constant
@@ -232,3 +233,11 @@ class SensorData():
 
         except OSError:
             return None
+    
+    def plotMotorTorque(self):
+
+        animation.FuncAnimation(plt.gcf(), self.torque_output, interval=1000//MOTOR_CONTROL_FREQ)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Torque (Nm)")
+        plt.title("Real-time Motor Torque")
+

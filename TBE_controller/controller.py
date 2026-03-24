@@ -58,6 +58,7 @@ class TBECalibration():
 
         # TO check whether calibration is done or not
         self.calibrated = False
+        self.current_phase = 0.0
 
         # Checking phase of calibration
         self._stride_times_collected = False
@@ -163,7 +164,7 @@ class TBECalibration():
 
         # If less time than stride, keep updating into list
         if elapsed < self.controller.stride_time:    
-            self.current_torque_profile_points.append(self.data.torque_input)
+            self.current_torque_profile_points.append(self.data.torque_output)
             self.stride_saved = False   
 
         # Once exceeded stride time, save list and reset for next stride
@@ -234,11 +235,11 @@ class TBEActivation():
 
         elapsed = self.logger.getCurrentTime() - self.controller.last_heel_strike_time
         phase = elapsed / self.controller.stride_time
-        phase = float(np.clip(phase, 0.0, 1.0))        
+        self.calibration.current_phase = float(np.clip(phase, 0.0, 1.0))        
 
         # Command torque during stance 
         if phase < 1.0:
-            self.giveTorqueOutput(phase)
+            self.giveTorqueOutput(self.calibration.current_phase)
         elif not self.calibration.detectStancePhase():
             self.data.torque_output = 0.0
             self.data.sendTorqueData()   
@@ -259,6 +260,6 @@ class TBEImpedanceController():
         if not (hyper_flexion_value == 0):
             self.logger.logger.info("Joint limit exceeded! Applying safety impedance control.")
             # Simple proportional impedance control
-            torque_command = -KP_IMPEDANCE * hyper_flexion_value -KD_IMPEDANCE * self.data.filtered_encoder_velocity
+            torque_command = KP_IMPEDANCE * hyper_flexion_value + KD_IMPEDANCE * self.data.filtered_encoder_velocity
             # self.data.sendTorqueData(torque_command)
             self.data.torque_output += torque_command    
