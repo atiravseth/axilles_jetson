@@ -21,7 +21,7 @@ import time
 import struct
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
-I2C_BUS      = 7
+I2C_BUS      = 1
 ADC_ADDR     = 0x48   # ADS1115 default address (ADDR pin → GND)
 
 # ── ADS1115 Registers ─────────────────────────────────────────────────────────

@@ -1,5 +1,4 @@
-import numpy as np
-from controller import TBEController, TBECalibration, TBEActivation
+from controller import TBEController, TBECalibration, TBEActivation, TBEImpedanceController
 from data_obtainer import SensorData
 from utilities import *
 
@@ -21,8 +20,12 @@ def main():
     calibration = TBECalibration(controller, sensor_data, TBElog)
 
     TBElog.logger.info("Instantiating TBE Activation...")
-    # Create an instance of the TBEActivation class to activate
+    # Create an instance of the TBEActivation class to activate the controller
     activation = TBEActivation(controller, sensor_data, calibration, TBElog)
+
+    # Create an instance of the TBEImpedanceController class to run impedance control
+    impedance_controller = TBEImpedanceController(controller, sensor_data, TBElog)
+    TBElog.logger.info("Instantiating TBE Impedance Controller...")
 
     TBElog.logger.info(f"Starting main loop at {MOTOR_CONTROL_FREQ} Hz...")
 
@@ -39,8 +42,12 @@ def main():
             if not calibration.calibrated:
                 calibration.calibrate()
             else:
+
+                # Run impedance control
+                impedance_controller.checkLimits()
                 # If calibrated, run activation
                 activation.activate()
+                
             
             elapsed = time.perf_counter() - loop_start
             sleep_time = DT - elapsed

@@ -45,19 +45,23 @@ class Logger():
 
 # The number of strides over which TBE takes average
 NUM_STRIDES = 5
-ADAPTIVE_STRIDE_WINDOW = 2
+ADAPTIVE_STRIDE_WINDOW = 0
 
 # THresholds for heel strike and toe off detection
-HEEL_STRIKE_THRESHOLD = 0.5
-TOE_OFF_THRESHOLD = 0.5
+HEEL_STRIKE_THRESHOLD = 15000 
+TOE_OFF_THRESHOLD = 4000
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
-I2C_BUS      = 7
+I2C_BUS      = 1
 ADC_ADDR     = 0x48   # ADS1115 default address (ADDR pin → GND)
 
 # ── ADS1115 Registers ─────────────────────────────────────────────────────────
 REG_CONVERSION = 0x00
 REG_CONFIG     = 0x01
+
+# AS5600 Encoder
+AS5600_ADDR      = 0x36
+AS5600_REG_ANGLE = 0x0E   # filtered 12-bit angle (MSB + LSB)
 
 # ── Config register templates (high byte, low byte) ──────────────────────────
 # High byte:  OS=1 | MUX[2:0] | PGA=001 (±4.096 V) | MODE=1 (single‑shot)
@@ -78,12 +82,17 @@ CONV_DELAY = 1 / 128 + 0.002   # >1 conversion period @ 128 SPS + margin
 DT = 1.0 / MOTOR_CONTROL_FREQ
 
 # cut off frequency for low-pass fsr filtering (Hz)
-FSR_FILTER_CUTOFF = 10.0
+FSR_FILTER_CUTOFF = 20.0
+ENC_VEL_CUTOFF = 20.0
 
-# Encoder joint limits
-PLANTARFLEXION_LIMIT = 30.0   # degrees
-DORSIFLEXION_LIMIT = -20.0    # degrees
+# Encoder calibration and limit values
+ENCODER_OFFSET = 160.0
+PLANTARFLEXION_LIMIT = 30.0
+DORSIFLEXION_LIMIT = 15.0 
 
-# Impedance control parameters
-KP_IMPEDANCE = 0.5
-KD_IMPEDANCE = 0.01
+# Impedance controller PD values
+KP_IMPEDANCE = 0.0
+KD_IMPEDANCE = 0.0
+
+# Assistance percentage for torque profile during activation
+ASSISTANCE_LEVEL = 0.3

@@ -14,8 +14,8 @@ MIT_P_MIN  = -12.56
 MIT_P_MAX  =  12.56
 MIT_V_MIN  = -65.0
 MIT_V_MAX  =  65.0
-MIT_T_MIN  = -18.0
-MIT_T_MAX  =  18.0
+MIT_T_MIN  = -5.0
+MIT_T_MAX  =  5.0
 MIT_KP_MIN =   0.0
 MIT_KP_MAX = 500.0
 MIT_KD_MIN =   0.0
@@ -53,8 +53,16 @@ class SensorData():
         self.filtered_toe_fsr = 0.0
         self.alpha = 2 * np.pi * FSR_FILTER_CUTOFF * DT / (2 * np.pi * FSR_FILTER_CUTOFF * DT + 1)
 
-        # Torque input data (actual torque read back from motor)
-        self.torque_input = 0.0
+        # Torque output (torque sent to the motor)
+        self.torque_output = 0.0
+
+        # Encoder position and velocity
+        self.encoder_data = 0.0
+        self.encoder_velocity = 0.0
+        self._prev_encoder_data = -np.inf
+        self._prev_encoder_time = time.perf_counter()
+        self.filtered_encoder_velocity = 0.0
+        self.alpha_enc = 2 * np.pi * ENC_VEL_CUTOFF * DT / (2 * np.pi * ENC_VEL_CUTOFF * DT + 1)
 
         # To read encoder data
         self.encoder_data = 0.0
@@ -84,11 +92,18 @@ class SensorData():
     def readSensors(self):
 
         # Reading FSR data
+        
         self.toe_fsr = self.read_channel(self.bus, CFG_AIN0)
         self.heel_fsr = self.read_channel(self.bus, CFG_AIN1)
 
+        # Passing the fsr data through a low pass filter
+        self.lowPassFilter()
+
+        # Reading encoder data
+        self.readEncoder()
+        
         # ADDED: Read motor feedback from CAN bus
-        self._readMotorFeedback()
+        # self._readMotorFeedback()
 
         # ADDED: Store actual motor torque for calibration torque profile recording
         # Motor reports current in Amps — convert to torque using motor torque constant
@@ -110,6 +125,7 @@ class SensorData():
         # Simple low-pass filter using exponential moving average
         self.filtered_heel_fsr = self.alpha * self.heel_fsr + (1 - self.alpha) * self.filtered_heel_fsr 
         self.filtered_toe_fsr = self.alpha * self.toe_fsr + (1 - self.alpha) * self.filtered_toe_fsr 
+        # self.logger.logger.info(f"Filtered Heel FSR: {self.filtered_heel_fsr:.2f}, Filtered Toe FSR: {self.filtered_toe_fsr:.2f}")
 
     # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
     def sendTorqueData(self):
@@ -119,8 +135,8 @@ class SensorData():
             return
 
         # Clamp torque to motor limits
-        torque = _clamp(self.torque_input, MIT_T_MIN, MIT_T_MAX)
-
+        self.torque_output = ASSISTANCE_LEVEL * _clamp(self.torque_output, MIT_T_MIN, MIT_T_MAX)
+        self.logger.logger.info(f"Sending torque command: {self.torque_output:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
         kd = 0.0
@@ -131,7 +147,7 @@ class SensorData():
         kd_int = _float_to_uint(kd,     MIT_KD_MIN, MIT_KD_MAX, 12)
         p_int  = _float_to_uint(pos,    MIT_P_MIN,  MIT_P_MAX,  16)
         v_int  = _float_to_uint(vel,    MIT_V_MIN,  MIT_V_MAX,  12)
-        t_int  = _float_to_uint(torque, MIT_T_MIN,  MIT_T_MAX,  12)
+        t_int  = _float_to_uint(self.torque_output, MIT_T_MIN,  MIT_T_MAX,  12)
 
         buf = [0] * 8
         buf[0] =  kp_int >> 4
@@ -146,6 +162,7 @@ class SensorData():
         arb_id = (MODE_MIT << 8) | MOTOR_ID
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
         self.can_bus.send(msg)
+        self.torque_output = 0.0  # Reset after sending
 
         # Reseting the torque value to zero
         self.torque_input = 0.0
@@ -198,3 +215,34 @@ class SensorData():
         # Big-endian signed 16-bit
         raw = struct.unpack(">h", bytes(data))[0]
         return raw
+    
+    def readEncoder(self) -> None:
+        """Read 12-bit filtered angle from AS5600, return degrees 0–360."""
+        try:
+            # Get encoder angle
+            data = self.bus.read_i2c_block_data(AS5600_ADDR, AS5600_REG_ANGLE, 2)
+            raw = ((data[0] & 0x0F) << 8) | data[1]
+            self.encoder_data = raw * (360.0 / 4096.0) - ENCODER_OFFSET 
+
+            now = time.perf_counter()
+            dt = now - self._prev_encoder_time
+
+            # Get encoder velocity
+            if self._prev_encoder_data == -np.inf:
+                self._prev_encoder_data = self.encoder_data 
+
+            delta = self.encoder_data - self._prev_encoder_data
+            if delta > 180.0:
+                delta -= 360.0
+            elif delta < -180.0:
+                delta += 360.0
+            
+            self.encoder_velocity = delta / dt
+
+            # Update filtered encoder velocity
+            self.filtered_encoder_velocity = self.alpha_enc * (delta / dt) + (1 - self.alpha_enc) * self.filtered_encoder_velocity
+            self._prev_encoder_time = now
+            self._prev_encoder_data = self.encoder_data
+
+        except OSError:
+            return None
