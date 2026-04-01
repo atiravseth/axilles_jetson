@@ -123,55 +123,12 @@ class TBECalibration():
     # Calculate the torque profile based on the stance phase percent and the stride time
     def calculateTorqueProfile(self) -> None:
 
-        common_grid = np.linspace(0, 1, 101)    
-        # resampled = []
-
-        # for stride in self.torque_profile_points:
-        #     original_phases = np.linspace(0, 1, len(stride))                  
-        #     resampled.append(np.interp(common_grid, original_phases, stride))
-
-        # mean_torque = np.mean(resampled, axis=0) 
-
-        '''
-        Overriding actual actual algo to produce motor torque
-        '''  
-
-        #### Start here ####
-
+        common_grid = np.linspace(0, 1, 101)  
         data = scipy.io.loadmat('avg_torque_profiles.mat')
 
         avg_profiles = data['avg_profiles']  # shape: (101, 2)
-        std_profiles = data['std_profiles']  # shape: (101, 2)
-        x_axis       = data['x_axis'].flatten()  # shape: (101,)
-
-        #### Until here ####
 
         self.controller.torque_profile = PchipInterpolator(common_grid, avg_profiles[:, 0]) 
-    
-    # Getting the torque profile points for each stride
-    def getTorqueProfilePoints(self) -> None:
-        
-        # On new stride, reset timer and list
-        if self._torque_stride_start_time is None:
-            if self.detectHeelStrikeEdge():
-                self._torque_stride_start_time = self.logger.getCurrentTime()
-                self.current_torque_profile_points = []
-                self.stride_saved = False
-            return  
-
-        elapsed = self.logger.getCurrentTime() - self._torque_stride_start_time
-
-        # If less time than stride, keep updating into list
-        if elapsed < self.controller.stride_time:    
-            self.current_torque_profile_points.append(self.data.torque_output)
-            self.stride_saved = False   
-
-        # Once exceeded stride time, save list and reset for next stride
-        elif not self.stride_saved:
-            self.torque_profile_points.append(self.current_torque_profile_points)
-            self.current_torque_profile_points = []
-            self.stride_saved = True
-            self._torque_stride_start_time = None    
 
     # The actual calibration process
     def calibrate(self) -> None:
@@ -179,14 +136,9 @@ class TBECalibration():
         # Phase 1: Collect stride times
         if not self._stride_times_collected:
             self.getStanceTime()
-            return                          
-
-        # Phase 2: Collect torque profiles for NUM_STRIDES
-        # if len(self.torque_profile_points) < NUM_STRIDES:
-        #     self.getTorqueProfilePoints()
-        #     return                          
+            return                                                
         
-        # Phase 3: Build the torque profile interpolator
+        # Phase 2: Build the torque profile interpolator
         if self.controller.torque_profile is None:
             self.calculateTorqueProfile()
             self.calibrated = True           
@@ -207,24 +159,11 @@ class TBEActivation():
     # Function to provide torque output based on the current time and the torque profile
     def giveTorqueOutput(self, phase: float) -> None:
         if self.controller.torque_profile is not None:
-            # self.data.sendTorqueData(float(self.controller.torque_profile(phase)))
             self.data.torque_input += float(self.controller.torque_profile(phase))
             self.data.sendTorqueData()
-    def activate(self) -> None:
 
-        # # Detect heel strike to reset phase reference
-        if self.calibration.detectHeelStrikeEdge():
-            current_time = self.logger.getCurrentTime()
-
-            # Compute stride duration from previous heel strike before overwriting
-            if not np.isnan(self.controller.last_heel_strike_time):       
-                latest_stride = current_time - self.controller.last_heel_strike_time
-                self._recent_strides.append(latest_stride)
-                if len(self._recent_strides) > ADAPTIVE_STRIDE_WINDOW:
-                    self._recent_strides.pop(0)
-                # self.controller.stride_time = float(np.median(self._recent_strides))
-
-            self.controller.last_heel_strike_time = current_time         
+    # Function to activate the controller based on the current phase of the gait cycle
+    def activate(self) -> None:       
 
         # Check for heel strike reference and stride time to compute phase
         if np.isnan(self.controller.last_heel_strike_time):
@@ -236,12 +175,14 @@ class TBEActivation():
         phase = elapsed / self.controller.stride_time
         phase = float(np.clip(phase, 0.0, 1.0))        
 
-        # Command torque during stance 
-        if phase < 1.0:
-            self.giveTorqueOutput(phase)
-        else:
+        # Command torque during stance, and not in swing
+        if not self.calibration.detectStancePhase():
             self.data.torque_input = 0.0
-            self.data.sendTorqueData()   
+            self.data.sendTorqueData()
+            return
+        
+        if phase < 1.0:
+            self.giveTorqueOutput(phase)  
 
 # Class for the safety impedance controller to keep ankle joint angle within safe limits (not implemented in current version, but can be extended in future)
 class TBEImpedanceController():
@@ -258,7 +199,7 @@ class TBEImpedanceController():
         # Check if encoder data is within limits and if not, command opposing impedance torque
         if not (hyper_flexion_value == 0):
             self.logger.logger.warning("Joint limit exceeded! Applying safety impedance control.")
-            # Simple proportional impedance control
-            torque_command = -KP_IMPEDANCE * hyper_flexion_value
+            # Simple PD impedance control
+            torque_command = KP_IMPEDANCE * hyper_flexion_value + KD_IMPEDANCE * self.data.encoder_velocity
             # self.data.sendTorqueData(torque_command)
             self.data.torque_input += torque_command  
