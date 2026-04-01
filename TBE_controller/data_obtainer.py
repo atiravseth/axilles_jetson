@@ -56,6 +56,9 @@ class SensorData():
         # Torque input data (actual torque read back from motor)
         self.torque_input = 0.0
 
+        # To read encoder data
+        self.encoder_data = 0.0
+
         # ADDED: Motor feedback data
         self.motor_position = 0.0       # degrees
         self.motor_speed = 0.0          # ERPM
@@ -91,7 +94,16 @@ class SensorData():
         # Motor reports current in Amps — convert to torque using motor torque constant
         # For AK80-9: torque ≈ current × kt × gear_ratio
         # But the feedback current is already the output torque estimate in most firmware
-        self.torque_input = self.motor_current
+        # self.torque_input = self.motor_current
+
+        # TODO:Resetting torque input value for every iteration
+        self.torque_input = 0.0
+
+        # TODO: Obtain encoder data (not motor encoder, its custom)
+        # self.encoder_data = self.readEncoder()
+
+        # TODO: NEED TO FIND OUT HOW TO GET VELOCITY INPUT FROM ENCODER DATA
+        # self.encoder_velocity = self.readEncoderVelocity()
 
     # Function to filter the data using a low-pass filter (for FSR data)
     def lowPassFilter(self):
@@ -100,14 +112,14 @@ class SensorData():
         self.filtered_toe_fsr = self.alpha * self.toe_fsr + (1 - self.alpha) * self.filtered_toe_fsr 
 
     # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
-    def sendTorqueData(self, torque: float):
+    def sendTorqueData(self):
 
         if self.can_bus is None:
             self.logger.logger.warning("CAN bus not available. Torque not sent.")
             return
 
         # Clamp torque to motor limits
-        torque = _clamp(torque, MIT_T_MIN, MIT_T_MAX)
+        torque = _clamp(self.torque_input, MIT_T_MIN, MIT_T_MAX)
 
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
@@ -135,6 +147,9 @@ class SensorData():
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
         self.can_bus.send(msg)
 
+        # Reseting the torque value to zero
+        self.torque_input = 0.0
+
     # ADDED: Read motor feedback from CAN reply
     def _readMotorFeedback(self):
 
@@ -150,7 +165,7 @@ class SensorData():
         self.motor_position    = struct.unpack(">h", bytes(msg.data[0:2]))[0] * 0.1    # degrees
         self.motor_speed       = struct.unpack(">h", bytes(msg.data[2:4]))[0] * 10.0   # ERPM
         self.motor_current     = struct.unpack(">h", bytes(msg.data[4:6]))[0] * 0.01   # Amps
-        self.motor_temperature = msg.data[6]                                             # °C
+        self.motor_temperature = msg.data[6]                                           # °C
         self.motor_error       = msg.data[7]
 
     # ADDED: Stop motor safely (zero velocity command)
@@ -159,7 +174,8 @@ class SensorData():
             return
 
         # Send zero torque via MIT mode
-        self.sendTorqueData(0.0)
+        self.torque_input = 0.0
+        self.sendTorqueData()
         self.logger.logger.info("Motor stopped (zero torque sent).")
 
     # ADDED: Shut down CAN bus cleanly
