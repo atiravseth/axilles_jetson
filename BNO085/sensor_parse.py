@@ -58,7 +58,7 @@ from adafruit_bno08x import (
 from bno085_live import quat_to_euler
 
 # ── Hardware constants ─────────────────────────────────────────────────────────
-I2C_BUS         = 7
+I2C_BUS         = 1
 
 IMU_A_ADDR      = 0x4A
 IMU_B_ADDR      = 0x4B

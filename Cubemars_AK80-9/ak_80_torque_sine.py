@@ -25,9 +25,9 @@ CAN_INTERFACE = "can0"
 MOTOR_ID      = 0x68          # Your motor CAN ID
 
 # Sine wave parameters
-AMPLITUDE     = 5.0           # Peak torque in Nm (wave goes from -5 to +5)
-FREQUENCY     = 0.5           # Hz (one full cycle every 2 seconds)
-OFFSET        = 0.0           # Nm (shifts the wave up/down, e.g., 5.0 makes it 0 to 10 Nm)
+AMPLITUDE     = 1.0           # Peak torque in Nm (wave goes from -22 to +22)
+FREQUENCY     = 0.0           # Hz (one full cycle every 2 seconds)
+OFFSET        = -5.0           # Nm (shifts the wave up/down, e.g., 5.0 makes it 0 to 10 Nm)
 
 # Loop rate
 CONTROL_FREQ  = 200           # Hz
@@ -38,8 +38,8 @@ MIT_P_MIN  = -12.56
 MIT_P_MAX  =  12.56
 MIT_V_MIN  = -65.0
 MIT_V_MAX  =  65.0
-MIT_T_MIN  = -18.0
-MIT_T_MAX  =  18.0
+MIT_T_MIN  = -22.0
+MIT_T_MAX  =  22.0
 MIT_KP_MIN =   0.0
 MIT_KP_MAX = 500.0
 MIT_KD_MIN =   0.0

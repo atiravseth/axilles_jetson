@@ -124,11 +124,11 @@ class TBECalibration():
     def calculateTorqueProfile(self) -> None:
 
         common_grid = np.linspace(0, 1, 101)    
-        resampled = []
+        # resampled = []
 
-        for stride in self.torque_profile_points:
-            original_phases = np.linspace(0, 1, len(stride))                  
-            resampled.append(np.interp(common_grid, original_phases, stride))
+        # for stride in self.torque_profile_points:
+        #     original_phases = np.linspace(0, 1, len(stride))                  
+        #     resampled.append(np.interp(common_grid, original_phases, stride))
 
         # mean_torque = np.mean(resampled, axis=0) 
 
@@ -163,7 +163,7 @@ class TBECalibration():
 
         # If less time than stride, keep updating into list
         if elapsed < self.controller.stride_time:    
-            self.current_torque_profile_points.append(self.data.torque_input)
+            self.current_torque_profile_points.append(self.data.torque_output)
             self.stride_saved = False   
 
         # Once exceeded stride time, save list and reset for next stride
@@ -182,9 +182,9 @@ class TBECalibration():
             return                          
 
         # Phase 2: Collect torque profiles for NUM_STRIDES
-        if len(self.torque_profile_points) < NUM_STRIDES:
-            self.getTorqueProfilePoints()
-            return                          
+        # if len(self.torque_profile_points) < NUM_STRIDES:
+        #     self.getTorqueProfilePoints()
+        #     return                          
         
         # Phase 3: Build the torque profile interpolator
         if self.controller.torque_profile is None:

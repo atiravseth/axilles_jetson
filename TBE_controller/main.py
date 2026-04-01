@@ -1,4 +1,3 @@
-import numpy as np
 from controller import TBEController, TBECalibration, TBEActivation, TBEImpedanceController
 from data_obtainer import SensorData
 from utilities import *
@@ -21,7 +20,7 @@ def main():
     calibration = TBECalibration(controller, sensor_data, TBElog)
 
     TBElog.logger.info("Instantiating TBE Activation...")
-    # Create an instance of the TBEActivation class to activate
+    # Create an instance of the TBEActivation class to activate the controller
     activation = TBEActivation(controller, sensor_data, calibration, TBElog)
 
     # Create an instance of the TBEImpedanceController class to run impedance control
@@ -40,7 +39,7 @@ def main():
             sensor_data.readSensors()
 
             # If not calibrated, run calibration
-            if  calibration.calibrated:
+            if not calibration.calibrated:
                 calibration.calibrate()
             else:
 

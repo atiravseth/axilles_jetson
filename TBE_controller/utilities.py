@@ -48,11 +48,11 @@ NUM_STRIDES = 5
 ADAPTIVE_STRIDE_WINDOW = 0
 
 # THresholds for heel strike and toe off detection
-HEEL_STRIKE_THRESHOLD = 5000 
+HEEL_STRIKE_THRESHOLD = 15000 
 TOE_OFF_THRESHOLD = 4000
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
-I2C_BUS      = 7
+I2C_BUS      = 1
 ADC_ADDR     = 0x48   # ADS1115 default address (ADDR pin → GND)
 
 # ── ADS1115 Registers ─────────────────────────────────────────────────────────
@@ -86,13 +86,13 @@ FSR_FILTER_CUTOFF = 20.0
 ENC_VEL_CUTOFF = 20.0
 
 # Encoder calibration and limit values
-ENCODER_OFFSET = 180.0
+ENCODER_OFFSET = 160.0
 PLANTARFLEXION_LIMIT = 30.0
 DORSIFLEXION_LIMIT = 15.0 
 
 # Impedance controller PD values
-KP_IMPEDANCE = 0.5
-KD_IMPEDANCE = 0.05
+KP_IMPEDANCE = 0.0
+KD_IMPEDANCE = 0.0
 
 # Assistance percentage for torque profile during activation
-ASSISTANCE_LEVEL = 0.6
+ASSISTANCE_LEVEL = 0.3
