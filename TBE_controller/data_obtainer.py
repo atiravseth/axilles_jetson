@@ -64,9 +64,6 @@ class SensorData():
         self.filtered_encoder_velocity = 0.0
         self.alpha_enc = 2 * np.pi * ENC_VEL_CUTOFF * DT / (2 * np.pi * ENC_VEL_CUTOFF * DT + 1)
 
-        # To read encoder data
-        self.encoder_data = 0.0
-
         # Bus to read FSR sensor data
         self.bus = smbus2.SMBus(I2C_BUS)
 
