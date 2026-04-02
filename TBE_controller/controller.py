@@ -51,6 +51,9 @@ class TBECalibration():
         self._prev_heel_state = False
         self._prev_toe_state = False
 
+        # To initialize edge rise and fall detection
+        self._edge_initialized = False
+
         # Torque profile parameters
         self.current_torque_profile_points = []
         self.torque_profile_points = []
@@ -96,6 +99,13 @@ class TBECalibration():
     
     # Calculate the median stride time from the stride time array
     def getStanceTime(self) -> None:
+
+        # Prime edge states on first call to avoid duplicates
+        if not self._edge_initialized:
+            self._prev_heel_state = self.detectHeelGround()
+            self._prev_toe_state = self.detectToeOff()
+            self._edge_initialized = True
+            return
 
         # Detect transitions
         heel_strike_edge = self.detectHeelStrikeEdge()
@@ -165,6 +175,13 @@ class TBEActivation():
     # Function to activate the controller based on the current phase of the gait cycle
     def activate(self) -> None:       
 
+        # Keep tracking heel strikes to update phase reference
+        if self.calibration.detectHeelStrikeEdge():
+            self.controller.last_heel_strike_time = self.logger.getCurrentTime()
+            self.logger.logger.info("Heel strike detected (activation). Phase reset.")
+            self.data.ledOn()
+
+
         # Check for heel strike reference and stride time to compute phase
         if np.isnan(self.controller.last_heel_strike_time):
             return
@@ -178,6 +195,7 @@ class TBEActivation():
         # Command torque during stance, and not in swing
         if not self.calibration.detectStancePhase():
             self.data.torque_input = 0.0
+            self.data.ledOff()
             self.data.sendTorqueData()
             return
         
