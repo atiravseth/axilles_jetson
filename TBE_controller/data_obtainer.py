@@ -131,7 +131,7 @@ class SensorData():
 
         arb_id = (MODE_MIT << 8) | MOTOR_ID
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
-        self.can_bus.send(msg)
+        # self.can_bus.send(msg)
   
         # Reseting the torque value to zero
         self.torque_input = 0.0
