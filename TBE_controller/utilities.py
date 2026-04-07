@@ -95,4 +95,4 @@ KP_IMPEDANCE = 0.0
 KD_IMPEDANCE = 0.0
 
 # Assistance percentage for torque profile during activation
-ASSISTANCE_LEVEL = 0.3
+ASSISTANCE_LEVEL = 1.0
