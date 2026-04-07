@@ -1,6 +1,7 @@
 import pandas as pd
 import scipy.io
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
+import numpy as np
 
 # df = pd.read_csv('avg_torque_profiles.csv')
 
@@ -9,7 +10,8 @@ import matplotlib.pyplot as plt
 # R_std = df['R_std'].values
 # L_std = df['L_std'].values
 
-data = scipy.io.loadmat('avg_torque_profiles.mat')
+# data = scipy.io.loadmat('avg_torque_profiles.mat')
+data = scipy.io.loadmat('ankle_data_clipped.mat')
 
 avg_profiles = data['avg_profiles']  # shape: (101, 2)
 std_profiles = data['std_profiles']  # shape: (101, 2)
@@ -18,7 +20,6 @@ x_axis       = data['x_axis'].flatten()  # shape: (101,)
 # Split into left and right
 R_avg = avg_profiles[:, 0]
 L_avg = avg_profiles[:, 1]
-print(R_avg)
 R_std = std_profiles[:, 0]
 L_std = std_profiles[:, 1]
 
