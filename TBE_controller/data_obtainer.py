@@ -90,19 +90,6 @@ class SensorData():
 
         # Reading encoder data
         self.readEncoder()
-    
-    # Functions to control the LED on the arduino micro board for debugging purposes
-    def ledOn(self):
-        try:
-            self.bus.write_byte(ARDUINO_ADDR, 1)
-        except OSError:
-            self.logger.logger.warning("Failed to send LED on command.")
-
-    def ledOff(self):
-        try:
-            self.bus.write_byte(ARDUINO_ADDR, 0)
-        except OSError:
-            self.logger.logger.warning("Failed to send LED off command.")
 
     # Function to filter the data using a low-pass filter (for FSR data)
     def lowPassFilter(self):

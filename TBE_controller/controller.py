@@ -179,8 +179,6 @@ class TBEActivation():
         if self.calibration.detectHeelStrikeEdge():
             self.controller.last_heel_strike_time = self.logger.getCurrentTime()
             self.logger.logger.info("Heel strike detected (activation). Phase reset.")
-            self.data.ledOn()
-
 
         # Check for heel strike reference and stride time to compute phase
         if np.isnan(self.controller.last_heel_strike_time):
@@ -195,7 +193,6 @@ class TBEActivation():
         # Command torque during stance, and not in swing
         if not self.calibration.detectStancePhase():
             self.data.torque_input = 0.0
-            self.data.ledOff()
             self.data.sendTorqueData()
             return
         
