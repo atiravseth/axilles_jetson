@@ -152,7 +152,7 @@ class TBECalibration():
 
         common_grid = np.linspace(0, 1, len(ankle_r))
 
-        self.controller.torque_profile = PchipInterpolator(common_grid, ankle_r[:, 0])
+        self.controller.torque_profile = PchipInterpolator(common_grid, ankle_r)
 
 
     # The actual calibration process
