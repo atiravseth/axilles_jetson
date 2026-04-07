@@ -96,10 +96,3 @@ KD_IMPEDANCE = 0.0
 
 # Assistance percentage for torque profile during activation
 ASSISTANCE_LEVEL = 0.3
-
-
-
-
-
-
-ARDUINO_ADDR = 0x10
