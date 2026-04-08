@@ -147,12 +147,18 @@ class TBECalibration():
 
         # Real collected torque profile data
         
-        data = scipy.io.loadmat('ankle_data_clipped.mat')
-        ankle_r = data['ankle_r'][0]  # shape: (200, )
+        # data = scipy.io.loadmat('ankle_data_clipped.mat')
+        # ankle_r = data['ankle_r'][0]  # shape: (200, )
 
-        common_grid = np.linspace(0, 1, len(ankle_r))
+        # common_grid = np.linspace(0, 1, len(ankle_r))
 
-        self.controller.torque_profile = PchipInterpolator(common_grid, ankle_r)
+        # self.controller.torque_profile = PchipInterpolator(common_grid, ankle_r)
+
+        # From real data, taking 6 points, and splining the data
+        phases  = TAU_PHASE_ARRAY
+        torques = TAU_VAL_ARRAY * PEAK_TORQUE
+
+        self.controller.torque_profile = PchipInterpolator(phases, torques)
 
 
     # The actual calibration process

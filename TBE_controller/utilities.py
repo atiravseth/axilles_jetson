@@ -96,5 +96,12 @@ DORSIFLEXION_LIMIT = 15.0
 KP_IMPEDANCE = 0.0
 KD_IMPEDANCE = 0.0
 
+# Peak torque for torque profile during activation (Nm)
+PEAK_TORQUE = 120
+TAU_PHASE_ARRAY = np.array([0.0, 0.20, 0.35, 0.52, 0.70, 1.0])
+TAU_VAL_ARRAY = np.array([0.0, 0.0,  0.2,  1.0,  0.0,  0.0])
+
 # Assistance percentage for torque profile during activation
 ASSISTANCE_LEVEL = 1.0
+
+
