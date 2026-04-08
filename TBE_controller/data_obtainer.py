@@ -160,7 +160,7 @@ class SensorData():
         # Write config register to start conversion
         bus.write_i2c_block_data(ADC_ADDR, REG_CONFIG, config)
         # Wait for conversion to complete
-        time.sleep(CONV_DELAY)
+        # time.sleep(CONV_DELAY)
         # Read 2 bytes from conversion register
         data = bus.read_i2c_block_data(ADC_ADDR, REG_CONVERSION, 2)
         # Big-endian signed 16-bit
