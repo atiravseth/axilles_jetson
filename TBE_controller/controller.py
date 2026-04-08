@@ -185,6 +185,7 @@ class TBEActivation():
     def giveTorqueOutput(self, phase: float) -> None:
         if self.controller.torque_profile is not None:
             self.data.torque_input += float(self.controller.torque_profile(phase))
+         
             self.data.sendTorqueData()
 
     # Function to activate the controller based on the current phase of the gait cycle
