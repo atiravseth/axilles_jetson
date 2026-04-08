@@ -44,7 +44,7 @@ def main():
             else:
 
                 # Run impedance control
-                impedance_controller.checkLimits()
+                # impedance_controller.checkLimits()
                 # If calibrated, run activation
                 activation.activate()
                 
