@@ -1,6 +1,7 @@
 # file for all the parameters and utility functions of the TBE controller
 import logging
 import time
+import numpy as np
 
 # Creating a logger class for controller
 class Logger():
@@ -88,7 +89,7 @@ FSR_FILTER_CUTOFF = 20.0
 ENC_VEL_CUTOFF = 20.0
 
 # Encoder calibration and limit values
-ENCODER_OFFSET = 160.0
+ENCODER_OFFSET = 165.0
 PLANTARFLEXION_LIMIT = 30.0
 DORSIFLEXION_LIMIT = 15.0 
 
@@ -102,6 +103,6 @@ TAU_PHASE_ARRAY = np.array([0.0, 0.20, 0.35, 0.52, 0.70, 1.0])
 TAU_VAL_ARRAY = np.array([0.0, 0.0,  0.2,  1.0,  0.0,  0.0])
 
 # Assistance percentage for torque profile during activation
-ASSISTANCE_LEVEL = 1.0
+ASSISTANCE_LEVEL = 0.2
 
 
