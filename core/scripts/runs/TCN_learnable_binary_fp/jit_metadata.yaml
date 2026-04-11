@@ -1,0 +1,8 @@
+num_input_ch: 14
+output_size: 1
+output_units: Nm/kg
+subject_id: new_subject
+subject_idx: 5
+subject_mass_kg: 65.0
+use_subject_emb: true
+window_length: 300
