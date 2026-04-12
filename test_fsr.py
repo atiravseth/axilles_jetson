@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """
-FSR ADC test — ADS1115 on I2C bus 7, address 0x48.
+FSR ADC test — ADS1115 (foot + heel).
 
-Reads Force‑Sensitive Resistor (FSR) values from:
-  A0  →  AIN0 (single‑ended vs GND)
-  A1  →  AIN1 (single‑ended vs GND)
+Reads Force‑Sensitive Resistor values from:
+    HEEL FSR → AIN0 (single-ended vs GND)
+    FOOT FSR → AIN1 (single-ended vs GND)
 
-Prints raw ADC counts and the corresponding voltage at a fixed sample rate.
+Shows raw ADC counts + voltage and runs a basic activity check:
+if a sensor changes by at least DELTA_ACTIVE_COUNTS from startup baseline,
+it is marked ACTIVE.
+
 Press Ctrl+C to stop.
-
-ADS1115 config used:
-  PGA  = ±4.096 V  (1 LSB = 0.125 mV, covers 0–3.3 V signals)
-  Mode = single‑shot
-  DR   = 128 SPS
-  Comparator disabled
 """
 
 import smbus2
@@ -42,6 +39,7 @@ VOLTS_PER_COUNT = 4.096 / 32767   # ~0.125 mV per count
 # ── Sample interval ───────────────────────────────────────────────────────────
 SAMPLE_HZ  = 200          # target print rate
 CONV_DELAY = 1 / 128 + 0.002   # >1 conversion period @ 128 SPS + margin
+DELTA_ACTIVE_COUNTS = 300
 
 
 def read_channel(bus: smbus2.SMBus, config: list[int]) -> int:
@@ -57,26 +55,50 @@ def read_channel(bus: smbus2.SMBus, config: list[int]) -> int:
     return raw
 
 
+def state_from_delta(delta: int) -> str:
+    return "ACTIVE" if abs(delta) >= DELTA_ACTIVE_COUNTS else "idle  "
+
+
 def main():
     interval = 1.0 / SAMPLE_HZ
 
     print(f"ADS1115 FSR test — bus {I2C_BUS}, addr 0x{ADC_ADDR:02X}")
-    print(f"PGA ±4.096 V | 128 SPS | printing at {SAMPLE_HZ} Hz")
-    print(f"{'A0 counts':>12}  {'A0 volts':>10}  {'A1 counts':>12}  {'A1 volts':>10}")
-    print("-" * 52)
+    print(f"PGA ±4.096 V | 128 SPS | print rate {SAMPLE_HZ} Hz")
+    print(f"Activity threshold: |Δ| >= {DELTA_ACTIVE_COUNTS} counts")
+    print(
+        f"{'FOOT cnt':>9}  {'FOOT V':>8}  {'Δfoot':>7}  {'state':>6}"
+        f"   {'HEEL cnt':>9}  {'HEEL V':>8}  {'Δheel':>7}  {'state':>6}"
+    )
+    print("-" * 84)
 
     with smbus2.SMBus(I2C_BUS) as bus:
         try:
+            baseline_heel = read_channel(bus, CFG_AIN0)
+            baseline_foot = read_channel(bus, CFG_AIN1)
+
+            print(
+                f"Baseline set  FOOT={baseline_foot}  HEEL={baseline_heel}"
+            )
+
             while True:
                 t0 = time.monotonic()
 
-                raw0 = read_channel(bus, CFG_AIN0)
-                raw1 = read_channel(bus, CFG_AIN1)
+                raw_heel = read_channel(bus, CFG_AIN0)
+                raw_foot = read_channel(bus, CFG_AIN1)
 
-                v0 = max(raw0, 0) * VOLTS_PER_COUNT
-                v1 = max(raw1, 0) * VOLTS_PER_COUNT
+                v_foot = max(raw_foot, 0) * VOLTS_PER_COUNT
+                v_heel = max(raw_heel, 0) * VOLTS_PER_COUNT
 
-                print(f"{raw0:>12d}  {v0:>10.4f}  {raw1:>12d}  {v1:>10.4f}")
+                delta_foot = raw_foot - baseline_foot
+                delta_heel = raw_heel - baseline_heel
+
+                foot_state = state_from_delta(delta_foot)
+                heel_state = state_from_delta(delta_heel)
+
+                print(
+                    f"{raw_foot:>9d}  {v_foot:>8.4f}  {delta_foot:>+7d}  {foot_state:>6}"
+                    f"   {raw_heel:>9d}  {v_heel:>8.4f}  {delta_heel:>+7d}  {heel_state:>6}"
+                )
 
                 elapsed = time.monotonic() - t0
                 sleep_time = interval - elapsed
