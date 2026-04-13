@@ -51,7 +51,7 @@ WORKER_RATE_SCALE = 1.0
 WORKER_HZ = SENSOR_HZ * WORKER_RATE_SCALE
 
 # IMU hardware report generation rate (Hz).
-IMU_REPORT_HZ = 25.0
+IMU_REPORT_HZ = 200.0
 
 # I2C configuration (explicit sensor addresses)
 I2C_BUS = 1
@@ -74,7 +74,7 @@ OUTPUT_DIR = Path(__file__).resolve().parent / "data"
 OUTPUT_PREFIX = "data_collection"
 
 # Auto-stop behavior (seconds). Set <= 0 to disable auto-stop.
-AUTO_STOP_SECONDS = 30.0
+AUTO_STOP_SECONDS = 600.0
 
 # Optional diagnostics; disable to minimize runtime overhead.
 DIAGNOSTIC_METRICS = False

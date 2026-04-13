@@ -105,10 +105,10 @@ def main() -> None:
             foot_v = max(foot_raw, 0) * VOLTS_PER_COUNT
             heel_v = max(heel_raw, 0) * VOLTS_PER_COUNT
 
-            print(
-                f"FOOT={foot_raw:7d} ({foot_v:0.4f} V)   "
-                f"HEEL={heel_raw:7d} ({heel_v:0.4f} V)"
-            )
+            # print(
+            #     f"FOOT={foot_raw:7d} ({foot_v:0.4f} V)   "
+            #     f"HEEL={heel_raw:7d} ({heel_v:0.4f} V)"
+            # )
 
             next_tick += interval
             sleep_time = next_tick - time.perf_counter()
