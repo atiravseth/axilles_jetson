@@ -74,7 +74,7 @@ OUTPUT_DIR = Path(__file__).resolve().parent / "data"
 OUTPUT_PREFIX = "data_collection"
 
 # Auto-stop behavior (seconds). Set <= 0 to disable auto-stop.
-AUTO_STOP_SECONDS = 600.0
+AUTO_STOP_SECONDS = 0
 
 # Optional diagnostics; disable to minimize runtime overhead.
 DIAGNOSTIC_METRICS = False
