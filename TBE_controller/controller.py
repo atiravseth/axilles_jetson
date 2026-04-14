@@ -16,6 +16,7 @@ class TBEController:
 
         # median stride time
         self.stride_time = float('nan')
+        # self.stride_time = 1.0
 
         # time params
         self._init_time = time.perf_counter()   

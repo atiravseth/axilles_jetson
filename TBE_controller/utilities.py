@@ -49,8 +49,8 @@ NUM_STRIDES = 5
 ADAPTIVE_STRIDE_WINDOW = 0
 
 # THresholds for heel strike and toe off detection
-HEEL_STRIKE_THRESHOLD = 10000 
-TOE_OFF_THRESHOLD = 20000
+HEEL_STRIKE_THRESHOLD = 15000 
+TOE_OFF_THRESHOLD = 18000
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
 I2C_BUS      = 1
