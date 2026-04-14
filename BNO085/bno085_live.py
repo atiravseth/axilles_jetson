@@ -117,7 +117,7 @@ class IMUReader:
                                 BNO_REPORT_GYROSCOPE):
                     for attempt in range(FEATURE_RETRIES):
                         try:
-                            self._bno.enable_feature(feature)
+                            self._bno.enable_feature(feature, 5000)
                             break
                         except Exception:
                             if attempt == FEATURE_RETRIES - 1:
