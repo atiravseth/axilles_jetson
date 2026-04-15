@@ -154,7 +154,7 @@ class TBECalibration():
 
         # 3. From real data, taking 6 points, and splining the data
         phases  = TAU_PHASE_ARRAY
-        torques = TAU_VAL_ARRAY * PEAK_TORQUE
+        torques = TAU_VAL_ARRAY * PEAK_TORQUE * SCALE_VALUE
 
         self.controller.torque_profile = PchipInterpolator(phases, torques)
 
