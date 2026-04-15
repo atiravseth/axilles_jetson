@@ -49,8 +49,8 @@ NUM_STRIDES = 5
 ADAPTIVE_STRIDE_WINDOW = 0
 
 # THresholds for heel strike and toe off detection
-HEEL_STRIKE_THRESHOLD = 24000 
-TOE_OFF_THRESHOLD = 12000
+HEEL_STRIKE_THRESHOLD = 20000 
+TOE_OFF_THRESHOLD = 15000
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
 I2C_BUS      = 1
@@ -98,7 +98,7 @@ KD_IMPEDANCE = 0.0
 
 # Peak torque for torque profile during activation (Nm)
 PEAK_TORQUE = 120
-SCALE_VALUE = 0.1
+SCALE_VALUE = 1.0
 TAU_PHASE_ARRAY = np.array([0.0, 0.20, 0.35, 0.52, 0.70, 1.0])
 TAU_VAL_ARRAY = np.array([0.0, 0.0,  0.2,  1.0,  0.0,  0.0])
 
