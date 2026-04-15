@@ -51,7 +51,8 @@ def main():
             
             elapsed = time.perf_counter() - loop_start
             sleep_time = DT - elapsed
-            
+            # Print the values for elapsed and time left
+            # TBElog.logger.info(f"THe time elapsed: {elapsed}, sleep time : {sleep_time}")
             # If the loop is running faster than the desired frequency, sleep for the remaining time
             if sleep_time > 0:
                 time.sleep(sleep_time)

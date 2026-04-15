@@ -25,9 +25,9 @@ CAN_INTERFACE = "can0"
 MOTOR_ID      = 0x68          # Your motor CAN ID
 
 # Sine wave parameters
-AMPLITUDE     = 1.0           # Peak torque in Nm (wave goes from -22 to +22)
-FREQUENCY     = 0.0           # Hz (one full cycle every 2 seconds)
-OFFSET        = -5.0           # Nm (shifts the wave up/down, e.g., 5.0 makes it 0 to 10 Nm)
+AMPLITUDE     = 0.75           # Peak torque in Nm (wave goes from -22 to +22)
+FREQUENCY     = 1.0           # Hz (one full cycle every 2 seconds)
+OFFSET        = 0.0           # Nm (shifts the wave up/down, e.g., 5.0 makes it 0 to 10 Nm)
 
 # Loop rate
 CONTROL_FREQ  = 200           # Hz
@@ -129,7 +129,7 @@ def main():
 
             # Generate sinusoidal torque command
             torque_cmd = OFFSET + AMPLITUDE * math.sin(2 * math.pi * FREQUENCY * t)
-
+            print(f"DEBUG: t={t:.3f}s, torque_cmd={torque_cmd:.2f} Nm")
             # Send to motor
             send_torque(bus, torque_cmd)
 

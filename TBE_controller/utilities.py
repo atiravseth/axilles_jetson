@@ -49,8 +49,8 @@ NUM_STRIDES = 5
 ADAPTIVE_STRIDE_WINDOW = 0
 
 # THresholds for heel strike and toe off detection
-HEEL_STRIKE_THRESHOLD = 15000 
-TOE_OFF_THRESHOLD = 18000
+HEEL_STRIKE_THRESHOLD = 18000 
+TOE_OFF_THRESHOLD = 12000
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
 I2C_BUS      = 1
@@ -68,7 +68,6 @@ AS5600_REG_ANGLE = 0x0E   # filtered 12-bit angle (MSB + LSB)
 # High byte:  OS=1 | MUX[2:0] | PGA=001 (±4.096 V) | MODE=1 (single‑shot)
 # Low byte:   DR=100 (128 SPS) | COMP_MODE=0 | COMP_POL=0 | COMP_LAT=0 | COMP_QUE=11 (disabled)
 _CFG_LO  = 0x83   # 128 SPS, comparator disabled
-# _CFG_LO  = 0xE3   # 860 SPS, comparator disabled (was 0x83 = 128 SPS)
 
 CFG_AIN0 = [0xC3, _CFG_LO]   # OS=1, MUX=100 (AIN0 vs GND)
 CFG_AIN1 = [0xD3, _CFG_LO]   # OS=1, MUX=101 (AIN1 vs GND)
@@ -78,7 +77,7 @@ VOLTS_PER_COUNT = 4.096 / 32767   # ~0.125 mV per count
 
 # ── Sample interval ───────────────────────────────────────────────────────────
 MOTOR_CONTROL_FREQ = 200
-# CONV_DELAY = 1 / 128 + 0.002   # >1 conversion period @ 128 SPS + margin
+CONV_DELAY = 1 / 1000  # >1 conversion period @ 128 SPS + margin
 # CONV_DELAY = 1 / 860 + 0.0005  # 860 SPS mode — ~1.7 ms per channel
 
 # Duty time of motor control loop
@@ -103,6 +102,6 @@ TAU_PHASE_ARRAY = np.array([0.0, 0.20, 0.35, 0.52, 0.70, 1.0])
 TAU_VAL_ARRAY = np.array([0.0, 0.0,  0.2,  1.0,  0.0,  0.0])
 
 # Assistance percentage for torque profile during activation
-ASSISTANCE_LEVEL = 0.2
+ASSISTANCE_LEVEL = 0.5
 
 
