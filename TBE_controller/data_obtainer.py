@@ -88,9 +88,6 @@ class SensorData():
         # Passing the fsr data through a low pass filter
         self.lowPassFilter()
 
-        # Print the filtered values for the fsr
-        self.logger.logger.info(f"Filtered fsr values: {self.heel_fsr} and {self.toe_fsr}")
-
         # Reading encoder data
         self.readEncoder()
 
@@ -108,7 +105,7 @@ class SensorData():
             return
 
         # Clamp torque to motor limits
-        self.torque_input = - ASSISTANCE_LEVEL * _clamp(self.torque_input, MIT_T_MIN, MIT_T_MAX)
+        self.torque_input = _clamp(- ASSISTANCE_LEVEL * self.torque_input, MIT_T_MIN, MIT_T_MAX)
         self.logger.logger.info(f"Sending torque command: {self.torque_input:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
@@ -132,11 +129,9 @@ class SensorData():
         buf[6] = ((v_int  & 0xF) << 4) | (t_int >> 8)
         buf[7] =  t_int  & 0xFF
 
-
-
         arb_id = (MODE_MIT << 8) | MOTOR_ID
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
-        # self.can_bus.send(msg)
+        self.can_bus.send(msg)
   
         # Reseting the torque value to zero
         self.torque_input = 0.0
