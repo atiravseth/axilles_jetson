@@ -120,13 +120,13 @@ class SensorData():
         t_int  = _float_to_uint(self.torque_input, MIT_T_MIN,  MIT_T_MAX,  12)
 
         buf = [0] * 8
-        buf[0] =  p_int  >> 8
-        buf[1] =  p_int  & 0xFF
-        buf[2] =  v_int  >> 4
-        buf[3] = ((v_int  & 0xF) << 4) | (kp_int >> 8)
-        buf[4] =  kp_int & 0xFF
-        buf[5] =  kd_int >> 4
-        buf[6] = ((kd_int & 0xF) << 4) | (t_int >> 8)
+        buf[0] =  kp_int >> 4
+        buf[1] = ((kp_int & 0xF) << 4) | (kd_int >> 8)
+        buf[2] =  kd_int & 0xFF
+        buf[3] =  p_int  >> 8
+        buf[4] =  p_int  & 0xFF
+        buf[5] =  v_int  >> 4
+        buf[6] = ((v_int  & 0xF) << 4) | (t_int >> 8)
         buf[7] =  t_int  & 0xFF
 
         arb_id = (MODE_MIT << 8) | MOTOR_ID
