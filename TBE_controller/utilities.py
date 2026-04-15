@@ -49,7 +49,7 @@ NUM_STRIDES = 5
 ADAPTIVE_STRIDE_WINDOW = 0
 
 # THresholds for heel strike and toe off detection
-HEEL_STRIKE_THRESHOLD = 20000 
+HEEL_STRIKE_THRESHOLD = 22000 
 TOE_OFF_THRESHOLD = 15000
 
 # ── Hardware ──────────────────────────────────────────────────────────────────
@@ -77,8 +77,6 @@ VOLTS_PER_COUNT = 4.096 / 32767   # ~0.125 mV per count
 
 # ── Sample interval ───────────────────────────────────────────────────────────
 MOTOR_CONTROL_FREQ = 150
-CONV_DELAY = 1 / 1000  # >1 conversion period @ 128 SPS + margin
-# CONV_DELAY = 1 / 860 + 0.0005  # 860 SPS mode — ~1.7 ms per channel
 
 # Duty time of motor control loop
 DT = 1.0 / MOTOR_CONTROL_FREQ
@@ -98,11 +96,11 @@ KD_IMPEDANCE = 0.0
 
 # Peak torque for torque profile during activation (Nm)
 PEAK_TORQUE = 120
-SCALE_VALUE = 1.0
-TAU_PHASE_ARRAY = np.array([0.0, 0.20, 0.35, 0.52, 0.70, 1.0])
-TAU_VAL_ARRAY = np.array([0.0, 0.0,  0.2,  1.0,  0.0,  0.0])
+SCALE_VALUE = 0.15
+TAU_PHASE_ARRAY = np.array([0.0, 0.1, 0.25, 0.40, 0.70, 1.0])
+TAU_VAL_ARRAY = np.array([0.0, 0.0, 0.2,  1.0,  0.0,  0.0])
 
 # Assistance percentage for torque profile during activation
-ASSISTANCE_LEVEL = 0.2
+ASSISTANCE_LEVEL = 0.1
 
 
