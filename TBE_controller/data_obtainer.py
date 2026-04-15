@@ -161,11 +161,16 @@ class SensorData():
         self.logger.logger.info("I2C bus closed.")
 
     def read_channel(self, bus: smbus2.SMBus, config: list[int]) -> int:
-        """Trigger a single-shot conversion and return the signed 16-bit raw count."""
+        """Trigger a single-shot conversion and poll until ready."""
         # Write config register to start conversion
         bus.write_i2c_block_data(ADC_ADDR, REG_CONFIG, config)
-        # Wait for conversion to complete
-        time.sleep(CONV_DELAY)
+
+        # Poll the OS bit (bit 15 of config register) until conversion completes
+        while True:
+            cfg = bus.read_i2c_block_data(ADC_ADDR, REG_CONFIG, 2)
+            if cfg[0] & 0x80:
+                break
+
         # Read 2 bytes from conversion register
         data = bus.read_i2c_block_data(ADC_ADDR, REG_CONVERSION, 2)
         # Big-endian signed 16-bit
