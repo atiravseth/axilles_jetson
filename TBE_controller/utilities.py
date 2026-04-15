@@ -97,8 +97,13 @@ KD_IMPEDANCE = 0.0
 # Peak torque for torque profile during activation (Nm)
 PEAK_TORQUE = 120
 SCALE_VALUE = 0.15
-TAU_PHASE_ARRAY = np.array([0.0, 0.1, 0.25, 0.40, 0.70, 1.0])
-TAU_VAL_ARRAY = np.array([0.0, 0.0, 0.2,  1.0,  0.0,  0.0])
+# TAU_PHASE_ARRAY = np.array([0.0, 0.1, 0.25, 0.40, 0.70, 1.0])
+# TAU_VAL_ARRAY = np.array([0.0, 0.0, 0.2,  1.0,  0.0,  0.0])
+
+
+# Looks like the assistance is toe in and toe off
+TAU_PHASE_ARRAY = np.array([0.0, 0.6, 0.7, 0.8, 0.9, 1.0])
+TAU_VAL_ARRAY = np.array([0.0, 0.0, 0.2,  1.0,  0.2,  0.0])
 
 # Assistance percentage for torque profile during activation
 ASSISTANCE_LEVEL = 0.1
