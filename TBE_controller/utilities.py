@@ -77,7 +77,7 @@ CFG_AIN1 = [0xD3, _CFG_LO]   # OS=1, MUX=101 (AIN1 vs GND)
 VOLTS_PER_COUNT = 4.096 / 32767   # ~0.125 mV per count
 
 # ── Sample interval ───────────────────────────────────────────────────────────
-MOTOR_CONTROL_FREQ = 200
+MOTOR_CONTROL_FREQ = 150
 # CONV_DELAY = 1 / 128 + 0.002   # >1 conversion period @ 128 SPS + margin
 # CONV_DELAY = 1 / 860 + 0.0005  # 860 SPS mode — ~1.7 ms per channel
 
@@ -99,7 +99,7 @@ KD_IMPEDANCE = 0.0
 
 # Peak torque for torque profile during activation (Nm)
 PEAK_TORQUE = 120
-TAU_PHASE_ARRAY = np.array([0.0, 0.20, 0.35, 0.52, 0.70, 1.0])
+TAU_PHASE_ARRAY = np.array([0.0, 0.10, 0.20, 0.35, 0.70, 1.0])
 TAU_VAL_ARRAY = np.array([0.0, 0.0,  0.2,  1.0,  0.0,  0.0])
 
 # Assistance percentage for torque profile during activation

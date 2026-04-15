@@ -71,6 +71,8 @@ class SensorData():
         try:
             self.can_bus = can.interface.Bus(channel=CAN_INTERFACE, interface="socketcan")
             self.logger.logger.info(f"CAN bus opened on {CAN_INTERFACE}")
+
+            self.enterMotorMode()  # Ensure motor is in MIT mode at startup
         except Exception as e:
             self.logger.logger.error(f"Failed to open CAN bus: {e}")
             self.logger.logger.error("Run: sudo ip link set can0 up type can bitrate 1000000")
@@ -96,6 +98,22 @@ class SensorData():
         # Simple low-pass filter using exponential moving average
         self.filtered_heel_fsr = self.alpha * self.heel_fsr + (1 - self.alpha) * self.filtered_heel_fsr 
         self.filtered_toe_fsr = self.alpha * self.toe_fsr + (1 - self.alpha) * self.filtered_toe_fsr 
+
+    def enterMotorMode(self):
+        if self.can_bus is None:
+            return
+        data = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC]
+        msg = can.Message(arbitration_id=MOTOR_ID, data=data, is_extended_id=False)
+        self.can_bus.send(msg)
+        self.logger.logger.info("Entered MIT motor mode.")
+
+    def exitMotorMode(self):
+        if self.can_bus is None:
+            return
+        data = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFD]
+        msg = can.Message(arbitration_id=MOTOR_ID, data=data, is_extended_id=False)
+        self.can_bus.send(msg)
+        self.logger.logger.info("Exited MIT motor mode.")
 
     # ADDED: Send torque command to motor via CAN (MIT impedance mode, pure torque)
     def sendTorqueData(self):
@@ -150,6 +168,7 @@ class SensorData():
     def shutdown(self):
         self.stopMotor()
         if self.can_bus is not None:
+            self.exitMotorMode()
             self.can_bus.shutdown()
             self.logger.logger.info("CAN bus shut down.")
         self.bus.close()
