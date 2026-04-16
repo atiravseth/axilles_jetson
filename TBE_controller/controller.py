@@ -134,7 +134,7 @@ class TBECalibration():
     # Calculate the torque profile based on the stance phase percent and the stride time
     def calculateTorqueProfile(self) -> None:
 
-        # Simulation generated torque profile data
+        # 1. Simulation generated torque profile data
 
         # common_grid = np.linspace(0, 1, 101)  
         # data = scipy.io.loadmat('avg_torque_profiles.mat')
@@ -143,10 +143,7 @@ class TBECalibration():
 
         # self.controller.torque_profile = PchipInterpolator(common_grid, avg_profiles[:, 0]) 
 
-
-
-
-        # Real collected torque profile data
+        # 2. Real collected torque profile data
         
         # data = scipy.io.loadmat('ankle_data_clipped.mat')
         # ankle_r = data['ankle_r'][0]  # shape: (200, )
@@ -155,7 +152,7 @@ class TBECalibration():
 
         # self.controller.torque_profile = PchipInterpolator(common_grid, ankle_r)
 
-        # From real data, taking 6 points, and splining the data
+        # 3. From real data, taking 6 points, and splining the data
         phases  = TAU_PHASE_ARRAY
         torques = TAU_VAL_ARRAY * PEAK_TORQUE * SCALE_VALUE
 
