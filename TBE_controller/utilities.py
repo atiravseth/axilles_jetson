@@ -95,8 +95,8 @@ KP_IMPEDANCE = 0.0
 KD_IMPEDANCE = 0.0
 
 # Peak torque for torque profile during activation (Nm)
-PEAK_TORQUE = 100
-SCALE_VALUE = 0.10
+PEAK_TORQUE = 70
+SCALE_VALUE = 0.8
 # TAU_PHASE_ARRAY = np.array([0.0, 0.1, 0.25, 0.40, 0.70, 1.0])
 # TAU_VAL_ARRAY = np.array([0.0, 0.0, 0.2,  1.0,  0.0,  0.0])
 
