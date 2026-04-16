@@ -108,4 +108,7 @@ TAU_VAL_ARRAY = np.array([0.0, 0.0, 0.2,  1.0,  0.2,  0.0])
 # Assistance percentage for torque profile during activation
 ASSISTANCE_LEVEL = 0.1
 
+# Teleplot UDP configuration
+TELEPLOT_HOST = "127.0.0.1"
+TELEPLOT_PORT = 47269
 

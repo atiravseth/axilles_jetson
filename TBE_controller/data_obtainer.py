@@ -1,9 +1,10 @@
 from utilities import *
 import numpy as np
 import smbus2
-import can          # ADDED: for CAN bus communication
+import can         
 import struct
 import time
+import socket
 
 # ── CAN / Motor Constants ─────────────────────────────────────────────────── # ADDED
 CAN_INTERFACE = "can0"
@@ -56,6 +57,9 @@ class SensorData():
         # Torque output (torque sent to the motor)
         self.torque_input = 0.0
 
+        # Torque sent to telepot
+        self._torque_plot = 0.0
+
         # Encoder position and velocity
         self.encoder_data = 0.0
         self.encoder_velocity = 0.0
@@ -79,6 +83,32 @@ class SensorData():
             self.can_bus = None
 
         self.logger.logger.info("Sensor stream channel opened.")
+
+        # Teleplot UDP socket for live plotting
+        self._tp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._tp_addr = (TELEPLOT_HOST, TELEPLOT_PORT)
+        self.logger.logger.info(f"Teleplot UDP target: {TELEPLOT_HOST}:{TELEPLOT_PORT}")
+
+    def _tp_send(self, name: str, value: float, timestamp_ms: int) -> None:
+        try:
+            msg = f"{name}:{timestamp_ms}:{value}|g"
+            self._tp_sock.sendto(msg.encode("utf-8"), self._tp_addr)
+        except OSError:
+            pass
+
+    def publishTelemetry(self) -> None:
+        now_ms = int(time.time() * 1000)
+
+        telemetry = [
+            ("heel_fsr_filt,FSR Filtered", self.filtered_heel_fsr),
+            ("toe_fsr_filt,FSR Filtered", self.filtered_toe_fsr),
+            ("ankle_angle,Encoder", self.encoder_data),
+            ("ankle_velocity,Encoder Velocity", self.filtered_encoder_velocity),
+            ("torque_cmd,Torque", -self._torque_plot),
+        ]
+
+        for name, value in telemetry:
+            self._tp_send(name, float(value), now_ms)
     
     # Function to read the sensors data
     def readSensors(self):
@@ -95,6 +125,9 @@ class SensorData():
 
         # Reading encoder data
         self.readEncoder()
+
+        # Publish all sensor data to telemetry
+        self.publishTelemetry()
 
     # Function to filter the data using a low-pass filter (for FSR data)
     def lowPassFilter(self):
@@ -153,7 +186,8 @@ class SensorData():
         arb_id = (MODE_MIT << 8) | MOTOR_ID
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
         # self.can_bus.send(msg)
-  
+
+        self._torque_plot = self.torque_input   
         # Reseting the torque value to zero
         self.torque_input = 0.0
 
@@ -170,6 +204,8 @@ class SensorData():
     # ADDED: Shut down CAN bus cleanly
     def shutdown(self):
         self.stopMotor()
+        self._tp_sock.close()
+        self.logger.logger.info("Teleplot socket closed.")
         if self.can_bus is not None:
             self.exitMotorMode()
             self.can_bus.shutdown()
