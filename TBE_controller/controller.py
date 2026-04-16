@@ -3,7 +3,6 @@ import time
 import numpy as np
 from typing import Optional
 from scipy.interpolate import PchipInterpolator
-import scipy.io
 
 from utilities import *
 from data_obtainer import SensorData
