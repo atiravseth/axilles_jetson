@@ -104,7 +104,7 @@ class SensorData():
             ("toe_fsr_filt,FSR Filtered", self.filtered_toe_fsr),
             ("ankle_angle,Encoder", self.encoder_data),
             ("ankle_velocity,Encoder Velocity", self.filtered_encoder_velocity),
-            ("torque_cmd,Torque", -self._torque_plot),
+            ("torque_cmd,Torque", self._torque_plot),
         ]
 
         for name, value in telemetry:
@@ -159,7 +159,7 @@ class SensorData():
             return
 
         # Clamp torque to motor limits
-        self.torque_input = _clamp( - ASSISTANCE_LEVEL * self.torque_input, MIT_T_MIN, MIT_T_MAX)
+        self.torque_input = _clamp(ASSISTANCE_LEVEL * self.torque_input, MIT_T_MIN, MIT_T_MAX)
         self.logger.logger.info(f"Sending torque command: {self.torque_input:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
