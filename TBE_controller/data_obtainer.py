@@ -159,7 +159,7 @@ class SensorData():
             return
 
         # Clamp torque to motor limits
-        self.torque_input = _clamp(ASSISTANCE_LEVEL * self.torque_input, MIT_T_MIN, MIT_T_MAX)
+        self.torque_input = _clamp( - ASSISTANCE_LEVEL * self.torque_input, MIT_T_MIN, MIT_T_MAX)
         self.logger.logger.info(f"Sending torque command: {self.torque_input:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
@@ -187,7 +187,7 @@ class SensorData():
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
         self.can_bus.send(msg)
 
-        self._torque_plot = self.torque_input   
+        self._torque_plot = -self.torque_input   
         # Reseting the torque value to zero
         self.torque_input = 0.0
 
