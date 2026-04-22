@@ -34,7 +34,7 @@ def main():
         while True:
 
             loop_start = time.perf_counter()
-
+            
             # Read the sensor data
             sensor_data.readSensors()
 

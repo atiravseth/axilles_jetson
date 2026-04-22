@@ -61,7 +61,7 @@ class TBECalibration():
 
         # TO check whether calibration is done or not
         self.calibrated = False
-
+        
         # Checking phase of calibration
         self._stride_times_collected = False
 

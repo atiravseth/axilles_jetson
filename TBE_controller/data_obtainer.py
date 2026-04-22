@@ -160,7 +160,7 @@ class SensorData():
 
         # Clamp torque to motor limits
         self.torque_input = _clamp( - ASSISTANCE_LEVEL * self.torque_input, MIT_T_MIN, MIT_T_MAX)
-        self.logger.logger.info(f"Sending torque command: {self.torque_input:.2f} Nm")
+        # self.logger.logger.info(f"Sending torque command: {self.torque_input:.2f} Nm")
         # MIT mode with kp=0, kd=0, pos=0, vel=0 → pure feedforward torque
         kp = 0.0
         kd = 0.0
@@ -185,9 +185,15 @@ class SensorData():
 
         arb_id = (MODE_MIT << 8) | MOTOR_ID
         msg = can.Message(arbitration_id=arb_id, data=buf, is_extended_id=True)
-        self.can_bus.send(msg)
+        # self.can_bus.send(msg)
 
-        self._torque_plot = -self.torque_input   
+        # Getting feedback
+        feedback = self.read_feedback()
+        if feedback is not None:
+            self._torque_plot = -self.torque_input
+        else:
+            self._torque_plot = 0.0  
+           
         # Reseting the torque value to zero
         self.torque_input = 0.0
 
@@ -212,6 +218,19 @@ class SensorData():
             self.logger.logger.info("CAN bus shut down.")
         self.bus.close()
         self.logger.logger.info("I2C bus closed.")
+
+    # Read b
+    def read_feedback(self):
+        msg = self.can_bus.recv(timeout=0.001)
+        if msg is None or len(msg.data) < 8:
+            return None
+        return {
+            "position":    struct.unpack(">h", bytes(msg.data[0:2]))[0] * 0.1,   # deg
+            "speed":       struct.unpack(">h", bytes(msg.data[2:4]))[0] * 10.0,  # ERPM (sign useful)
+            "current":     struct.unpack(">h", bytes(msg.data[4:6]))[0] * 0.01,  # A
+            "temperature": msg.data[6],
+            "error":       msg.data[7],
+        }
 
     def read_channel(self, bus: smbus2.SMBus, config: list[int]) -> int:
         """Trigger a single-shot conversion and poll until ready."""
