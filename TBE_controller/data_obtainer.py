@@ -96,6 +96,7 @@ class SensorData():
 
         # In __init__
         self.system_state = 0  # 0=OFF, 1=CALIBRATING, 2=ACTIVE, 3=ESTOP
+        self.motor_alive = True
 
     def _dash_send(self, name: str, value: float) -> None:
         try:
