@@ -89,6 +89,33 @@ class SensorData():
         self._tp_addr = (TELEPLOT_HOST, TELEPLOT_PORT)
         self.logger.logger.info(f"Teleplot UDP target: {TELEPLOT_HOST}:{TELEPLOT_PORT}")
 
+        # Teleplot host for GUI
+        self._dash_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._dash_addr = (TELEPLOT_HOST, 47270)
+        self.logger.logger.info(f"Dashboard UDP target: {TELEPLOT_HOST}:47270")
+
+        # In __init__
+        self.system_state = 0  # 0=OFF, 1=CALIBRATING, 2=ACTIVE, 3=ESTOP
+
+    def _dash_send(self, name: str, value: float) -> None:
+        try:
+            ts = int(time.time() * 1000)
+            msg = f"{name}:{ts}:{value}"
+            self._dash_sock.sendto(msg.encode("utf-8"), self._dash_addr)
+        except OSError:
+            pass
+
+    def publishDashboard(self, heel_on: bool, toe_off_on: bool, phase: float) -> None:
+        self._dash_send("heel_fsr_filt", self.filtered_heel_fsr)
+        self._dash_send("toe_fsr_filt", self.filtered_toe_fsr)
+        self._dash_send("heel_strike_on", 1.0 if heel_on else 0.0)
+        self._dash_send("toe_off_on", 1.0 if toe_off_on else 0.0)
+        self._dash_send("torque_cmd", self.torque_input)
+        self._dash_send("gait_phase", phase)
+        self._dash_send("ankle_angle", self.encoder_data)
+        self._dash_send("motor_alive", 1.0 if self.motor_alive else 0.0)
+        self._dash_send("system_state", float(self.system_state))
+
     def _tp_send(self, name: str, value: float, timestamp_ms: int) -> None:
         try:
             msg = f"{name}:{timestamp_ms}:{value}|g"
@@ -212,6 +239,8 @@ class SensorData():
         self.stopMotor()
         self._tp_sock.close()
         self.logger.logger.info("Teleplot socket closed.")
+        self._dash_sock.close()
+        self.logger.logger.info("Dashboard socket closed.")
         if self.can_bus is not None:
             self.exitMotorMode()
             self.can_bus.shutdown()
