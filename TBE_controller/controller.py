@@ -213,8 +213,18 @@ class TBEActivation():
         # Command torque during stance, and not in swing
         if not self.calibration.detectStancePhase():
             self.data.torque_input = 0.0
-            self.data.sendTorqueData()
-            return
+            #  When emergency stop is pressed
+            if self.data.can_bus is None:
+                self.logger.logger.info("Emergency stop activated. Stopping torque output.")
+                feedback = self.data.read_feedback()
+                if feedback is not None:
+                    self.data._torque_plot = -self.data.torque_input
+                else:
+                    self.data._torque_plot = 0.0  
+                return
+            else:
+                self.data.sendTorqueData()
+                return
         
         if phase < 1.0:
             self.giveTorqueOutput(phase)  
