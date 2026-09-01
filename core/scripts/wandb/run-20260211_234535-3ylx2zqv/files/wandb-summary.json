@@ -1,1 +1,0 @@
-{"_runtime":677,"batch/loss":0.0036803660914301872,"val/loss":0.0058215140669169475,"_step":1607,"global_step":1602,"_timestamp":1.770872214123622e+09,"batch/rmse":0.06066602095961571,"val/rmse":0.07407890616191758,"_wandb":{"runtime":677},"epoch":6,"train/epoch_loss":0.0043890350988918265}

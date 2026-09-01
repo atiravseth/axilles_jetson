@@ -1,1 +1,0 @@
-{"_wandb":{"runtime":448},"train/epoch_loss":0.004240659667385462,"test/rmse":0.4149849048064601,"_runtime":448,"_step":6384,"epoch/time":69.62918591499329,"batch/loss":0.004165487363934517,"val/loss":0.052322307491516805,"batch/rmse":0.06454058736562729,"_timestamp":1.772234858201212e+09,"epoch":6,"global_step":6378,"val/rmse":0.2248608325758288,"test/loss":0.2003311568110474}

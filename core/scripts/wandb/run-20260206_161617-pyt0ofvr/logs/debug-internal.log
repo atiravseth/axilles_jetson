@@ -1,6 +1,0 @@
-{"time":"2026-02-06T16:16:17.741802-05:00","level":"INFO","msg":"stream: starting","core version":"0.24.0"}
-{"time":"2026-02-06T16:16:18.014686-05:00","level":"INFO","msg":"stream: created new stream","id":"pyt0ofvr"}
-{"time":"2026-02-06T16:16:18.014746-05:00","level":"INFO","msg":"handler: started","stream_id":"pyt0ofvr"}
-{"time":"2026-02-06T16:16:18.014905-05:00","level":"INFO","msg":"stream: started","id":"pyt0ofvr"}
-{"time":"2026-02-06T16:16:18.014905-05:00","level":"INFO","msg":"writer: started","stream_id":"pyt0ofvr"}
-{"time":"2026-02-06T16:16:18.014917-05:00","level":"INFO","msg":"sender: started","stream_id":"pyt0ofvr"}

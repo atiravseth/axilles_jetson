@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/narayanan/PycharmProjects/MRSD_exoskeleton/core/scripts/train.py", line 240, in <module>
-    main()
-  File "/Users/narayanan/PycharmProjects/MRSD_exoskeleton/core/scripts/train.py", line 176, in main
-    model = TCN(
-            ^^^^
-TypeError: TCN.__init__() got an unexpected keyword argument 'activation'

@@ -1,9 +1,0 @@
-[TRAIN] Loading 30 trials: ['AB06_levelground_ccw_fast_01_01_features.csv', 'AB06_levelground_ccw_fast_02_01_features.csv', 'AB06_levelground_ccw_fast_03_01_features.csv'] ...
-[VAL] Loading 30 trials: ['AB06_levelground_ccw_fast_01_01_features.csv', 'AB06_levelground_ccw_fast_02_01_features.csv', 'AB06_levelground_ccw_fast_03_01_features.csv'] ...
-/opt/miniconda3/envs/handout/lib/python3.12/site-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
-  WeightNorm.apply(module, name, dim)
-
---- Epoch 1/6 ---
-Epoch 1 [10/30] Loss: 0.810139
-Epoch 1 [20/30] Loss: 0.413703
-Epoch 1 [30/30] Loss: 0.400077

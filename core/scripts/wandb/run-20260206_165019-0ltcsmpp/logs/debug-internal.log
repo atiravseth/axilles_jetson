@@ -1,6 +1,0 @@
-{"time":"2026-02-06T16:50:19.543258-05:00","level":"INFO","msg":"stream: starting","core version":"0.24.0"}
-{"time":"2026-02-06T16:50:19.810735-05:00","level":"INFO","msg":"stream: created new stream","id":"0ltcsmpp"}
-{"time":"2026-02-06T16:50:19.810792-05:00","level":"INFO","msg":"handler: started","stream_id":"0ltcsmpp"}
-{"time":"2026-02-06T16:50:19.81095-05:00","level":"INFO","msg":"stream: started","id":"0ltcsmpp"}
-{"time":"2026-02-06T16:50:19.810956-05:00","level":"INFO","msg":"writer: started","stream_id":"0ltcsmpp"}
-{"time":"2026-02-06T16:50:19.810968-05:00","level":"INFO","msg":"sender: started","stream_id":"0ltcsmpp"}

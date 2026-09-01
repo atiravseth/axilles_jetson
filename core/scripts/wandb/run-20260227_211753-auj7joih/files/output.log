@@ -1,9 +1,0 @@
-/opt/miniconda3/envs/handout/lib/python3.12/site-packages/torch/nn/utils/weight_norm.py:144: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
-  WeightNorm.apply(module, name, dim)
-
---- Epoch 1/6 ---
-Epoch 1 [10/2301] Loss: 0.478070
-Epoch 1 [20/2301] Loss: 0.266678
-Epoch 1 [30/2301] Loss: 0.176270
-Epoch 1 [40/2301] Loss: 0.110671
-Epoch 1 [50/2301] Loss: 0.097262

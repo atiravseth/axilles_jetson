@@ -1,1 +1,0 @@
-{"global_step":6378,"_timestamp":1.772234244020364e+09,"_wandb":{"runtime":377},"test/loss":0.16435224942821616,"test/rmse":0.3789488880384353,"batch/loss":0.0038466129917651415,"epoch/time":58.69494390487671,"epoch":6,"train/epoch_loss":0.00471488122523797,"val/rmse":0.19525732491766254,"_runtime":377,"batch/rmse":0.06202106922864914,"val/loss":0.03972848792691241,"_step":6384}

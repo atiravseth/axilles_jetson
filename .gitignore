@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Experiment tracking & artifacts
+wandb/
+runs/
+outputs/
+logs/
+*.pt
+*.pth
+*.jit
+*.onnx
+*.engine
+*.pkl
+*.npy
+*.parquet
+
+# Data (kept outside the repo)
+processed_zscore_data/
+processed/
+data/
+
+# Local env
+.venv/
+venv/
